@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BunnyMark Benchmark</title>
+    <!-- <link rel="stylesheet" href="styles.css" /> -->
+  </head>
+  <body>
+    <header>
+      <h1>BunnyMark Benchmark</h1>
+      <div class="controls">
+        <label for="engine-select">Select Engine:</label>
+        <select id="engine-select">
+          <option value="rust-bevy">Rust-Bevy</option>
+          <option value="go-ebitengine">Go-Ebitengine</option>
+          <option value="js-phaser">JS-Phaser</option>
+        </select>
+        <button id="load-engine">Load Engine</button>
+      </div>
+    </header>
+    <main>
+      <div id="canvas-container">
+        <canvas id="game-canvas"></canvas>
+      </div>
+    </main>
+    <script src="loader.js">
+</script>
+  </body>
+</html>
