@@ -24,7 +24,7 @@ export function Layout({
                 <a href="/">Home</a>
               </li>
               <li>
-                <a href="/go-ebitengine">Go WASM</a>
+                <a href="/go-ebitengine">Go Ebitengine</a>
               </li>
               <li>
                 <a href="/rust-bevy">Rust Bevy</a>
@@ -52,10 +52,9 @@ export function Home() {
 export function ExampleGo() {
   return (
     <div>
-      <h1>Go Ebitengine Example</h1>
-      <p>Below is the embedded game, with automatic screen scaling.</p>
+      <h1>Go Wasm Example</h1>
       <iframe
-        src="/example-go/public/main.html"
+        src="/go-ebitengine/public/main.html"
         width="640"
         height="480"
         style={{ border: "0" }}
@@ -68,7 +67,6 @@ export function ExampleRust() {
   return (
     <div>
       <h1>Rust WASM Example</h1>
-      <p>Below is the embedded game, with automatic screen scaling.</p>
     </div>
   );
 }
@@ -77,7 +75,6 @@ export function ExampleJS() {
   return (
     <div>
       <h1>JavaScript Example</h1>
-      <p>Below is the embedded game, with automatic screen scaling.</p>
     </div>
   );
 }
