@@ -37,7 +37,7 @@ jobs:
         run: go test ./...
 
       - name: Build WASM
-        run: GOOS=js GOARCH=wasm go build -o ../public/game.wasm
+        run: GOOS=js GOARCH=wasm go build -o public/game.wasm
 
   deploy:
     name: Deploy
