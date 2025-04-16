@@ -1,45 +1,46 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixgl.url = "github:nix-community/nixGL";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
   outputs =
-    { nixpkgs, flake-utils, ... }:
+    {
+      nixpkgs,
+      nixgl,
+      flake-utils,
+      ...
+    }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = import nixpkgs { inherit system; };
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ nixgl.overlay ]; # Add nixGL overlay
+        };
       in
-      rec {
-        devShell =
-          with pkgs;
-          mkShell {
-            nativeBuildInputs = [
-              go
-              # gopls
-              gotools
-              mesa.drivers
-              mesa
-              gcc
-              libGL
-              xorg.libX11
-              xorg.libXcursor
-              xorg.libXext
-              xorg.libXi
-              xorg.libXinerama
-              xorg.libXrandr
-              xorg.libXxf86vm
-              # glfw
-              # alsa-lib
-              # pkg-config
-            ];
+      {
+        devShell = pkgs.mkShell {
+          nativeBuildInputs = with pkgs; [
+            pkgs.nixgl.nixGLIntel
+            go
+            libGL
+            mesa
+            xorg.libXrandr
+            xorg.libXcursor
+            xorg.libXinerama
+            xorg.libXi
+            xorg.libXxf86vm
+            alsa-lib
+            pkg-config
+          ];
 
-            env.LD_LIBRARY_PATH = lib.makeLibraryPath [
-              libGL
-              stdenv.cc.cc.lib
-            ];
-          };
+          shellHook = with pkgs; ''
+            export LIBGL_ALWAYS_SOFTWARE=1
+            export LD_LIBRARY_PATH=${lib.getLib libGL}/lib:$LD_LIBRARY_PATH
+          '';
+        };
       }
     );
 }
