@@ -61,5 +61,5 @@ jobs:
         uses: denoland/deployctl@v1
         with:
           project: "otuff-wasm-game-36"
-          entrypoint: "main.ts"
+          entrypoint: "server.tsx"
           root: "."
