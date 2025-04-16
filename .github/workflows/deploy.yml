@@ -75,3 +75,4 @@ jobs:
           project: "otuff-wasm-game-36"
           entrypoint: "server.tsx"
           root: "."
+          include: "**/*.wasm,**/*.js,**/*.html,**/*.tsx,**/*.ts,**/*.json"
