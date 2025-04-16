@@ -9,10 +9,35 @@ on:
       - main
 
 jobs:
+  check-changes:
+    name: Check Changed Files
+    runs-on: ubuntu-latest
+    outputs:
+      go_changed: ${{ steps.filter.outputs.go }}
+      rust_changed: ${{ steps.filter.outputs.rust }}
+      should_deploy: ${{ steps.filter.outputs.go == 'true' || steps.filter.outputs.rust == 'true' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Need full history for file changes
+
+      - name: Filter changed files
+        id: filter
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            go:
+              - 'go-ebitengine/**'
+            rust:
+              - 'rust-bevy/**'
+
   build-go:
     name: Build Go Project
     runs-on: ubuntu-latest
-    if: contains(github.event.commits.*.modified, 'go-ebitengine/')
+    needs: check-changes
+    if: needs.check-changes.outputs.go_changed == 'true'
 
     defaults:
       run:
@@ -44,10 +69,17 @@ jobs:
       - name: Build WASM
         run: GOOS=js GOARCH=wasm go build -o ../public/game.wasm
 
+      - name: Upload WASM
+        uses: actions/upload-artifact@v3
+        with:
+          name: go-wasm
+          path: public/game.wasm
+
   build-rust:
     name: Build Rust Project
     runs-on: ubuntu-latest
-    if: contains(github.event.commits.*.modified, 'rust-bevy/')
+    needs: check-changes
+    if: needs.check-changes.outputs.rust_changed == 'true'
 
     defaults:
       run:
@@ -75,10 +107,21 @@ jobs:
       - name: Build WASM
         run: cargo build --release --target wasm32-unknown-unknown
 
+      - name: Upload WASM
+        uses: actions/upload-artifact@v3
+        with:
+          name: rust-wasm
+          path: target/wasm32-unknown-unknown/release/*.wasm
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: [build-go, build-rust] # Wait for both build steps to finish
+    needs: [check-changes, build-go, build-rust]
+    if: |
+      always() && 
+      needs.check-changes.outputs.should_deploy == 'true' && 
+      (needs.build-go.result == 'success' || needs.build-go.result == 'skipped') && 
+      (needs.build-rust.result == 'success' || needs.build-rust.result == 'skipped')
 
     permissions:
       id-token: write # Needed for auth with Deno Deploy
@@ -87,6 +130,20 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Download Go WASM
+        uses: actions/download-artifact@v3
+        with:
+          name: go-wasm
+          path: public
+        if: needs.build-go.result == 'success'
+
+      - name: Download Rust WASM
+        uses: actions/download-artifact@v3
+        with:
+          name: rust-wasm
+          path: public
+        if: needs.build-rust.result == 'success'
 
       - name: Install Deno
         uses: denoland/setup-deno@v2
