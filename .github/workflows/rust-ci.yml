@@ -49,10 +49,3 @@ jobs:
         run: |
           mkdir -p ../public
           cp target/wasm32-unknown-unknown/release/*.wasm ../public/
-
-      - name: Upload WASM artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: rust-wasm
-          path: public/*.wasm
-          retention-days: 1

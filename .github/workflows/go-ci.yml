@@ -47,10 +47,3 @@ jobs:
 
       - name: Build WASM
         run: GOOS=js GOARCH=wasm go build -o ../public/game.wasm
-
-      - name: Upload WASM artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: go-wasm
-          path: public/game.wasm
-          retention-days: 1
