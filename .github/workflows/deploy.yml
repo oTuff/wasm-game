@@ -1,41 +1,55 @@
 name: Deploy
-
 on:
-  workflow_run:
-    workflows:
-      - "Go CI/CD"
-      # - "Rust CI/CD"
-    types:
-      - completed
-    branches:
-      - main
+  push:
+    branches: main
+  pull_request:
+    branches: main
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./go-ebitengine
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.24
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt install -y libc6-dev libgl1-mesa-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libasound2-dev pkg-config
+
+      - name: Install Dependencies
+        run: go mod tidy
+
+      - name: Static Analysis
+        run: go vet ./...
+
+      - name: Run Tests
+        run: go test ./...
+
+      - name: Build WASM
+        run: GOOS=js GOARCH=wasm go build -o ../public/game.wasm
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     permissions:
       id-token: write # Needed for auth with Deno Deploy
       contents: read # Needed to clone the repository
 
     steps:
-      - name: Debug Workflow Context
-        run: |
-          echo "Triggered by workflow: ${{ github.event.workflow_run.name }}"
-          echo "Workflow conclusion: ${{ github.event.workflow_run.conclusion }}"
-
       - name: Clone repository
         uses: actions/checkout@v4
-
-      - name: Download artifacts
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: ${{ github.event.workflow_run.name }}
-          workflow_conclusion: success
-          name: ${{ contains(github.event.workflow_run.name, 'Go') && 'go-wasm' || 'rust-wasm' }}
-          path: public
 
       - name: Install Deno
         uses: denoland/setup-deno@v2
@@ -45,6 +59,6 @@ jobs:
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
         with:
-          project: "otuff-wasm-game-36"
-          entrypoint: "server.tsx"
+          project: ""
+          entrypoint: "main.ts"
           root: "."
