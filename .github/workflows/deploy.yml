@@ -55,14 +55,14 @@ jobs:
       contents: read # Needed to clone the repository
 
     steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
       - name: Download wasm file
         uses: actions/download-artifact@v4
         with:
           name: game-wasm
           path: ./go-ebitengine/public
-
-      - name: Clone repository
-        uses: actions/checkout@v4
 
       - name: Install Deno
         uses: denoland/setup-deno@v2
@@ -75,4 +75,3 @@ jobs:
           project: "otuff-wasm-game-36"
           entrypoint: "server.tsx"
           root: "."
-          include: "**/*.wasm,**/*.js,**/*.html,**/*.tsx,**/*.ts,**/*.json"
