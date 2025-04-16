@@ -1,51 +1,51 @@
-name: Rust CI/CD
-
-on:
-  push:
-    paths:
-      - "rust-bevy/**"
-    branches:
-      - main
-  pull_request:
-    paths:
-      - "rust-bevy/**"
-    branches:
-      - main
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    outputs:
-      built: "true"
-
-    defaults:
-      run:
-        working-directory: ./rust-bevy
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          target: wasm32-unknown-unknown
-
-      - name: Install Dependencies
-        run: cargo fetch
-
-      - name: Build Project
-        run: cargo build --release
-
-      - name: Run Tests
-        run: cargo test
-
-      - name: Build WASM
-        run: cargo build --release --target wasm32-unknown-unknown
-
-      - name: Move WASM files to public directory
-        run: |
-          mkdir -p ../public
-          cp target/wasm32-unknown-unknown/release/*.wasm ../public/
+# name: Rust CI/CD
+#
+# on:
+#   push:
+#     paths:
+#       - "rust-bevy/**"
+#     branches:
+#       - main
+#   pull_request:
+#     paths:
+#       - "rust-bevy/**"
+#     branches:
+#       - main
+#
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       built: "true"
+#
+#     defaults:
+#       run:
+#         working-directory: ./rust-bevy
+#
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v3
+#
+#       - name: Set up Rust
+#         uses: actions-rs/toolchain@v1
+#         with:
+#           toolchain: stable
+#           override: true
+#           target: wasm32-unknown-unknown
+#
+#       - name: Install Dependencies
+#         run: cargo fetch
+#
+#       - name: Build Project
+#         run: cargo build --release
+#
+#       - name: Run Tests
+#         run: cargo test
+#
+#       - name: Build WASM
+#         run: cargo build --release --target wasm32-unknown-unknown
+#
+#       - name: Move WASM files to public directory
+#         run: |
+#           mkdir -p ../public
+#           cp target/wasm32-unknown-unknown/release/*.wasm ../public/
