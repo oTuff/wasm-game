@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows:
       - "Go CI/CD"
-      - "Rust CI/CD"
+      # - "Rust CI/CD"
     types:
       - completed
     branches:
