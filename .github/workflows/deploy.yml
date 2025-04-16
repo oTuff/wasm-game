@@ -1,156 +1,48 @@
-name: Build and Deploy
+name: Deploy
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+  workflow_run:
+    workflows:
+      - "Go CI/CD"
+      - "Rust CI/CD"
+    types:
+      - completed
     branches:
       - main
 
 jobs:
-  check-changes:
-    name: Check Changed Files
-    runs-on: ubuntu-latest
-    outputs:
-      go_changed: ${{ steps.filter.outputs.go }}
-      rust_changed: ${{ steps.filter.outputs.rust }}
-      should_deploy: ${{ steps.filter.outputs.go == 'true' || steps.filter.outputs.rust == 'true' }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0 # Need full history for file changes
-
-      - name: Filter changed files
-        id: filter
-        uses: dorny/paths-filter@v2
-        with:
-          filters: |
-            go:
-              - 'go-ebitengine/**'
-            rust:
-              - 'rust-bevy/**'
-
-  build-go:
-    name: Build Go Project
-    runs-on: ubuntu-latest
-    needs: check-changes
-    if: needs.check-changes.outputs.go_changed == 'true'
-
-    defaults:
-      run:
-        working-directory: ./go-ebitengine
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: 1.24
-
-      - name: Install System Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt install -y libc6-dev libgl1-mesa-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libasound2-dev pkg-config
-
-      - name: Install Dependencies
-        run: go mod tidy
-
-      - name: Static Analysis
-        run: go vet ./...
-
-      - name: Run Tests
-        run: go test ./...
-
-      - name: Build WASM
-        run: GOOS=js GOARCH=wasm go build -o ../public/game.wasm
-
-      - name: Upload WASM
-        uses: actions/upload-artifact@v3
-        with:
-          name: go-wasm
-          path: public/game.wasm
-
-  build-rust:
-    name: Build Rust Project
-    runs-on: ubuntu-latest
-    needs: check-changes
-    if: needs.check-changes.outputs.rust_changed == 'true'
-
-    defaults:
-      run:
-        working-directory: ./rust-bevy
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-
-      - name: Install Dependencies
-        run: cargo fetch
-
-      - name: Build Project
-        run: cargo build --release
-
-      - name: Run Tests
-        run: cargo test
-
-      - name: Build WASM
-        run: cargo build --release --target wasm32-unknown-unknown
-
-      - name: Upload WASM
-        uses: actions/upload-artifact@v3
-        with:
-          name: rust-wasm
-          path: target/wasm32-unknown-unknown/release/*.wasm
-
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: [check-changes, build-go, build-rust]
-    if: |
-      always() && 
-      needs.check-changes.outputs.should_deploy == 'true' && 
-      (needs.build-go.result == 'success' || needs.build-go.result == 'skipped') && 
-      (needs.build-rust.result == 'success' || needs.build-rust.result == 'skipped')
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     permissions:
       id-token: write # Needed for auth with Deno Deploy
       contents: read # Needed to clone the repository
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Debug Workflow Context
+        run: |
+          echo "Triggered by workflow: ${{ github.event.workflow_run.name }}"
+          echo "Workflow conclusion: ${{ github.event.workflow_run.conclusion }}"
 
-      - name: Download Go WASM
-        uses: actions/download-artifact@v3
-        with:
-          name: go-wasm
-          path: public
-        if: needs.build-go.result == 'success'
+      - name: Clone repository
+        uses: actions/checkout@v4
 
-      - name: Download Rust WASM
-        uses: actions/download-artifact@v3
+      - name: Download artifacts
+        uses: dawidd6/action-download-artifact@v2
         with:
-          name: rust-wasm
+          workflow: ${{ github.event.workflow_run.name }}
+          workflow_conclusion: success
+          name: ${{ contains(github.event.workflow_run.name, 'Go') && 'go-wasm' || 'rust-wasm' }}
           path: public
-        if: needs.build-rust.result == 'success'
 
       - name: Install Deno
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
 
-      - name: Deploy to Deno
+      - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
         with:
           project: "otuff-wasm-game-36"
