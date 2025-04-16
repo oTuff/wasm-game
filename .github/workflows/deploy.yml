@@ -39,6 +39,12 @@ jobs:
       - name: Build WASM
         run: GOOS=js GOARCH=wasm go build -o public/game.wasm
 
+      - name: Upload wasm file
+        uses: actions/upload-artifact@v4
+        with:
+          name: game-wasm
+          path: public/game.wasm
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
@@ -49,6 +55,12 @@ jobs:
       contents: read # Needed to clone the repository
 
     steps:
+      - name: Download wasm file
+        uses: actions/download-artifact@v4
+        with:
+          name: game-wasm
+          path: go-ebitengine/public
+
       - name: Clone repository
         uses: actions/checkout@v4
 
