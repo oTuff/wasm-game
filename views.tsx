@@ -58,7 +58,8 @@ export function ExampleGo() {
         width="640"
         height="480"
         style={{ border: "0" }}
-      ></iframe>
+      >
+      </iframe>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { Application, Router, send } from "oak";
 import renderToString from "preact-render-to-string";
-import { Layout, Home, ExampleGo, ExampleRust, ExampleJS } from "./views.tsx";
+import { ExampleGo, ExampleJS, ExampleRust, Home, Layout } from "./views.tsx";
 
 const router = new Router();
 
@@ -32,4 +32,3 @@ app.use(router.routes());
 app.use(router.allowedMethods());
 
 app.listen({ port: 8080 });
-
