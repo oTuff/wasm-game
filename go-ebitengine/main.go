@@ -1,13 +1,16 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"image/png"
 	"log"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
+
+//go:embed assets
+var content embed.FS
 
 type Game struct {
 	Sprite *ebiten.Image
@@ -31,7 +34,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 
 func main() {
 	// Load image
-	imageFile, err := os.Open("../assets/bunny.png")
+	imageFile, err := content.Open("assets/bunny.png")
 	if err != nil {
 		fmt.Println("error opening image")
 	}
