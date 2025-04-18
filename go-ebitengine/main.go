@@ -36,13 +36,17 @@ func main() {
 	// Load image
 	imageFile, err := content.Open("assets/bunny.png")
 	if err != nil {
-		fmt.Println("error opening image")
+		log.Fatal("error opening image:", err)
 	}
-	defer imageFile.Close()
+	defer func() {
+		if imageFile != nil {
+			imageFile.Close()
+		}
+	}()
 
 	imageData, err := png.Decode(imageFile)
 	if err != nil {
-		fmt.Println("error decoding image data")
+		log.Fatal("error decoding image data:", err)
 	}
 
 	ebiten.SetWindowSize(640, 480)
