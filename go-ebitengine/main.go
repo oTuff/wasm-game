@@ -8,6 +8,11 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+const (
+	screenWidth  = 320
+	screenHeight = 240
+)
+
 //go:embed assets
 var content embed.FS
 
@@ -27,8 +32,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(g.Sprite, op)
 }
 
-func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 320, 240
+func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
+	return screenWidth, screenHeight
 }
 
 func main() {
@@ -48,7 +53,7 @@ func main() {
 		log.Fatal("error decoding image data:", err)
 	}
 
-	ebiten.SetWindowSize(640, 480)
+	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("BunnyMark Go Ebitengine")
 	if err := ebiten.RunGame(&Game{Sprite: ebiten.NewImageFromImage(imageData)}); err != nil {
 		log.Fatal(err)
