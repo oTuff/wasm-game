@@ -74,6 +74,14 @@ func (g *Game) AddBunnies(count int) {
 }
 
 func (g *Game) Update() error {
+
+	// fmt.Printf("cap %v, len %v, %p\n", cap(g.Bunnies), len(g.Bunnies), g.Bunnies)
+	// fmt.Printf("fps: %v\n", ebiten.ActualFPS())
+
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) {
+		g.AddBunnies(5)
+	}
+
 	for i := range g.Bunnies {
 		bunny := &g.Bunnies[i]
 
