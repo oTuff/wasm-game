@@ -2,17 +2,21 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"image/png"
 	"log"
 	"math/rand/v2"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 const (
 	screenWidth  = 640
 	screenHeight = 480
 	upperBound   = 40 // Amount of pixels from the top
+	bunnyScale   = 0.2
 )
 
 //go:embed assets
@@ -28,10 +32,10 @@ type Bunny struct {
 
 func NewBunny() *Bunny {
 	return &Bunny{
-		PosX:   0.0,
-		PosY:   0.0,
-		ScaleX: 0.5,
-		ScaleY: 0.5,
+		PosX:   rand.Float64() * 5,
+		PosY:   rand.Float64() * 5,
+		ScaleX: bunnyScale,
+		ScaleY: bunnyScale,
 		SpeedX: (rand.Float64() * 2) + 2, // 2 to 4
 		SpeedY: (rand.Float64() * 2) + 2, // 2 to 4
 	}
@@ -61,14 +65,47 @@ func (g *Game) edgeDetection(b *Bunny) {
 }
 
 func (g *Game) AddBunnies(count int) {
-	newBunnies := make([]Bunny, count)
+	newBunnies := make([]Bunny, count, count)
+	// fmt.Printf("count: %v\n", count)
+	// fmt.Printf("before: cap %v, len %v, %p\n", cap(newBunnies), len(newBunnies), newBunnies)
 	for i := range count {
 		newBunnies[i] = *NewBunny()
+		// newBunnies = append(newBunnies, *NewBunny())
+		// g.Bunnies = append(g.Bunnies, *NewBunny())
+		// fmt.Printf("cap %v, len %v, %p\n", cap(newBunnies), len(newBunnies), newBunnies)
 	}
 	g.Bunnies = append(g.Bunnies, newBunnies...)
 }
 
 func (g *Game) Update() error {
+
+	// fmt.Printf("cap %v, len %v, %p\n", cap(g.Bunnies), len(g.Bunnies), g.Bunnies)
+
+	// Left mouse button rapid fire add 10 bunnies
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) {
+		g.AddBunnies(10)
+	}
+
+	// Right mouse button round up to nearest 100
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButton2) {
+		current := len(g.Bunnies)
+		toAdd := 100 - (current % 100)
+		if toAdd == 0 {
+			toAdd = 100
+		}
+		g.AddBunnies(toAdd)
+	}
+
+	// Middle mouse button round up to nearest 1000
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButton1) {
+		current := len(g.Bunnies)
+		toAdd := 1000 - (current % 1000)
+		if toAdd == 0 {
+			toAdd = 1000
+		}
+		g.AddBunnies(toAdd)
+	}
+
 	for i := range g.Bunnies {
 		bunny := &g.Bunnies[i]
 
@@ -91,6 +128,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		screen.DrawImage(g.Sprite, op)
 	}
+
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("fps: %.0f\ntps: %.0f\nbunnies: %v", ebiten.ActualFPS(), ebiten.ActualTPS(), len(g.Bunnies)))
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -115,13 +154,15 @@ func main() {
 	// Create game instance
 	game := &Game{
 		Sprite:  sprite,
-		Bunnies: make([]Bunny, 0), // 1000), // Pre-allocate capacity for performance
+		Bunnies: make([]Bunny, 0, 1000), // Pre-allocate capacity for performance
 		Gravity: 0.75,
 	}
 
 	// Add initial bunnies
-	game.AddBunnies(5)
+	game.AddBunnies(10)
 
+	// ebiten.SetScreenClearedEveryFrame(false)
+	// ebiten.SetVsyncEnabled(true)
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("BunnyMark Go Ebitengine")
 

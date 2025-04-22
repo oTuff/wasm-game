@@ -83,8 +83,11 @@
   "remote": {
     "https://esm.sh/preact-render-to-string@6.3.1": "d0c7107a8b8ebc52797986a6ac9d57e780cf956fdad498f2dee58745c263d541",
     "https://esm.sh/preact-render-to-string@6.3.1/denonext/preact-render-to-string.mjs": "1f0e7b0aac1b9067fec288bb544b14beba78527fcf04f34fb02b098cb7fb5a6d",
+    "https://esm.sh/preact@10.19.3": "e665fa7cfbac33461e7ecf79f8b361a8f831b3e7edc8089d1f95e05fed6a8be1",
+    "https://esm.sh/preact@10.19.3/denonext/hooks.mjs": "d2909a69dced9dd62b62efda5ca42e16827cb23322808f59ddfe67d555426277",
     "https://esm.sh/preact@10.19.3/denonext/jsx-runtime.mjs": "aea5aea2cbb469e705804ff24e94299564a9d1e89ba6d1b08757962d2320aab6",
     "https://esm.sh/preact@10.19.3/denonext/preact.mjs": "050906b5fcc2e1703c3f58879378077191dbd58d5d415bcb8dcbc35c4fd0f5d9",
+    "https://esm.sh/preact@10.19.3/hooks": "ec6d1409b12bce994ec7f0711b17e41424e339727af83fb471acc63952e35278",
     "https://esm.sh/preact@10.19.3/jsx-runtime": "c0a489946b2a492ed590365ce1dbb2606adef27635722687b7d6320f57faf435",
     "https://esm.sh/preact@10.26.5/denonext/preact.mjs": "d8fd34a8324d1d4df0e3c03c6343d36214d09fe03862a1119640f2de0f80e916",
     "https://esm.sh/preact@10.26.5?target=denonext": "e45c1f6116e0648ddd56fdd8d91dc9f16ebccb66773f65a22008e47798989e61"
