@@ -61,9 +61,14 @@ func (g *Game) edgeDetection(b *Bunny) {
 }
 
 func (g *Game) AddBunnies(count int) {
-	newBunnies := make([]Bunny, count)
+	newBunnies := make([]Bunny, count, count)
+	// fmt.Printf("count: %v\n", count)
+	// fmt.Printf("before: cap %v, len %v, %p\n", cap(newBunnies), len(newBunnies), newBunnies)
 	for i := range count {
 		newBunnies[i] = *NewBunny()
+		// newBunnies = append(newBunnies, *NewBunny())
+		// g.Bunnies = append(g.Bunnies, *NewBunny())
+		// fmt.Printf("cap %v, len %v, %p\n", cap(newBunnies), len(newBunnies), newBunnies)
 	}
 	g.Bunnies = append(g.Bunnies, newBunnies...)
 }
@@ -115,7 +120,7 @@ func main() {
 	// Create game instance
 	game := &Game{
 		Sprite:  sprite,
-		Bunnies: make([]Bunny, 0), // 1000), // Pre-allocate capacity for performance
+		Bunnies: make([]Bunny, 0, 1000), // Pre-allocate capacity for performance
 		Gravity: 0.75,
 	}
 
