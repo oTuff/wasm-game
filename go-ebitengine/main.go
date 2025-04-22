@@ -2,17 +2,21 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"image/png"
 	"log"
 	"math/rand/v2"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 const (
 	screenWidth  = 640
 	screenHeight = 480
 	upperBound   = 40 // Amount of pixels from the top
+	bunnyScale   = 0.2
 )
 
 //go:embed assets
@@ -30,8 +34,8 @@ func NewBunny() *Bunny {
 	return &Bunny{
 		PosX:   0.0,
 		PosY:   0.0,
-		ScaleX: 0.5,
-		ScaleY: 0.5,
+		ScaleX: bunnyScale,
+		ScaleY: bunnyScale,
 		SpeedX: (rand.Float64() * 2) + 2, // 2 to 4
 		SpeedY: (rand.Float64() * 2) + 2, // 2 to 4
 	}
@@ -76,10 +80,30 @@ func (g *Game) AddBunnies(count int) {
 func (g *Game) Update() error {
 
 	// fmt.Printf("cap %v, len %v, %p\n", cap(g.Bunnies), len(g.Bunnies), g.Bunnies)
-	// fmt.Printf("fps: %v\n", ebiten.ActualFPS())
 
+	// Left mouse button rapid fire add 10 bunnies
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) {
-		g.AddBunnies(5)
+		g.AddBunnies(10)
+	}
+
+	// Right mouse button round up to nearest 100
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButton2) {
+		current := len(g.Bunnies)
+		toAdd := 100 - (current % 100)
+		if toAdd == 0 {
+			toAdd = 100
+		}
+		g.AddBunnies(toAdd)
+	}
+
+	// Middle mouse button round up to nearest 1000
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButton1) {
+		current := len(g.Bunnies)
+		toAdd := 1000 - (current % 1000)
+		if toAdd == 0 {
+			toAdd = 1000
+		}
+		g.AddBunnies(toAdd)
 	}
 
 	for i := range g.Bunnies {
@@ -104,6 +128,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		screen.DrawImage(g.Sprite, op)
 	}
+
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("fps: %.0f\ntps: %.0f\nbunnies: %v", ebiten.ActualFPS(), ebiten.ActualTPS(), len(g.Bunnies)))
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -133,8 +159,10 @@ func main() {
 	}
 
 	// Add initial bunnies
-	game.AddBunnies(5)
+	game.AddBunnies(10)
 
+	// ebiten.SetScreenClearedEveryFrame(false)
+	// ebiten.SetVsyncEnabled(true)
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("BunnyMark Go Ebitengine")
 
