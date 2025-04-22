@@ -19,6 +19,13 @@ pageRoutes.forEach(({ path, title, view: view }) => {
 });
 
 // Static files
+router.get("/public/(.*)", async (ctx) => {
+  const filePath = ctx.request.url.pathname.replace("/public", "");
+  await send(ctx, filePath, {
+    root: `${Deno.cwd()}/public`,
+  });
+});
+
 router.get("/:platform/public/(.*)", async (ctx) => {
   const { platform } = ctx.params;
   const filePath = ctx.request.url.pathname.replace(`/${platform}/public`, "");

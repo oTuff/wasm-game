@@ -32,8 +32,8 @@ type Bunny struct {
 
 func NewBunny() *Bunny {
 	return &Bunny{
-		PosX:   0.0,
-		PosY:   0.0,
+		PosX:   rand.Float64() * 5,
+		PosY:   rand.Float64() * 5,
 		ScaleX: bunnyScale,
 		ScaleY: bunnyScale,
 		SpeedX: (rand.Float64() * 2) + 2, // 2 to 4

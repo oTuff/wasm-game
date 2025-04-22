@@ -36,6 +36,13 @@ export function Layout({
           </nav>
         </header>
         <main style="display: flex; justify-content: center;">{children}</main>
+        {" "}
+        <p style="font-weight: bold;">Controls:</p>
+        <ul>
+          <li>'left click' to rapidly add 10 bunnies</li>
+          <li>'right click' to round up 100 bunnies</li>
+          <li>'middle click' to round up 1000 bunnies</li>
+        </ul>
       </body>
     </html>
   );
@@ -45,6 +52,10 @@ export function Home() {
   return (
     <div>
       <h1>Game Engine Wasm Benchmark</h1>
+      <p>
+        Navigate to the different benchmarks by clicking on the links on the
+        navbar at the top of the page
+      </p>
     </div>
   );
 }
