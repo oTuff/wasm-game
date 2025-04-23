@@ -6,37 +6,54 @@ on:
     branches: main
 
 jobs:
-  # changes:
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     go_ebitengine: ${{ steps.filter.outputs.go_ebitengine }}
-  #     rust_bevy: ${{ steps.filter.outputs.rust_bevy }}
-  #   steps:
-  #     - uses: dorny/paths-filter@v3
-  #       id: filter
-  #       with:
-  #         filters: |
-  #           go_ebitengine:
-  #             - 'go-ebitengine/**'
-  #           rust_bevy:
-  #             - 'rust-bevy/**'
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      go_ebitengine: ${{ steps.filter.outputs.go_ebitengine }}
+      rust_bevy: ${{ steps.filter.outputs.rust_bevy }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            go_ebitengine:
+              - 'go-ebitengine/**'
+            rust_bevy:
+              - 'rust-bevy/**'
+
   build_go:
     runs-on: ubuntu-latest
-    # needs: changes
-    # if: needs.changes.outputs.go_ebitengine == 'true'
-
+    needs: changes
+    if: needs.changes.outputs.go_ebitengine == 'true'
     defaults:
       run:
         working-directory: ./go-ebitengine
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('go-ebitengine/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Cache built Go WASM
+        id: cache-go-wasm
+        uses: actions/cache@v4
+        with:
+          path: public/game.wasm
+          key: ${{ runner.os }}-go-wasm-${{ hashFiles('**/*.go') }}
 
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: 1.24
+          cache-dependency-path: go-ebitengine/go.sum
 
       - name: Install System Dependencies
         run: |
@@ -59,26 +76,41 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: game-wasm
-          path: ${{ github.workspace }}/go-ebitengine/public/game.wasm
+          path: go-ebitengine/public/game.wasm
 
   build_rust:
     runs-on: ubuntu-latest
-    # needs: changes
-    # if: needs.changes.outputs.rust_bevy == 'true'
-
+    needs: changes
+    if: needs.changes.outputs.rust_bevy == 'true'
     defaults:
       run:
         working-directory: ./rust-bevy
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: actions/toolchain@v1
+      - name: Cache cargo registry and target
+        uses: actions/cache@v4
         with:
-          toolchain: stable
-          target: wasm32-unknown-unknown
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Cache built Rust WASM
+        id: cache-rust-wasm
+        uses: actions/cache@v4
+        with:
+          path: pkg
+          key: ${{ runner.os }}-rust-wasm-${{ hashFiles('src/**') }}
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
 
       - name: Install wasm-pack
         run: curl -sSfL https://rustwasm.github.io/wasm-pack/installer/init.sh | sh -s -- -y
@@ -87,37 +119,52 @@ jobs:
         run: wasm-pack build --target web
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: wasm-pack
-          path: pkg
-          # path: ${{ github.workspace }}/rust-bevy/pkg
+          path: /rust-bevy/pkg
 
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: [build_go, build_rust]
-    # if: always()
-
+    needs: [build_go, build_rust, changes]
+    if: always()
     permissions:
-      id-token: write # Needed for auth with Deno Deploy
-      contents: read # Needed to clone the repository
-
+      id-token: write
+      contents: read
     steps:
-      - name: Clone repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
+      # Download Go WASM if built, or restore from cache if not
       - name: Download go wasm file
+        if: needs.changes.outputs.go_ebitengine == 'true'
         uses: actions/download-artifact@v4
         with:
           name: game-wasm
           path: ./go-ebitengine/public
 
+      - name: Restore cached Go WASM
+        if: needs.changes.outputs.go_ebitengine != 'true'
+        uses: actions/cache@v4
+        with:
+          path: go-ebitengine/public/game.wasm
+          key: ${{ runner.os }}-go-wasm-${{ hashFiles('go-ebitengine/**/*.go') }}
+
+      # Download Rust WASM if built, or restore from cache if not
       - name: Download rust wasm file
+        if: needs.changes.outputs.rust_bevy == 'true'
         uses: actions/download-artifact@v4
         with:
           name: wasm-pack
-          path: ./rust-bevy/public
+          path: ./rust-bevy/pkg
+
+      - name: Restore cached Rust WASM
+        if: needs.changes.outputs.rust_bevy != 'true'
+        uses: actions/cache@v4
+        with:
+          path: rust-bevy/pkg
+          key: ${{ runner.os }}-rust-wasm-${{ hashFiles('rust-bevy/src/**') }}
 
       - name: Install Deno
         uses: denoland/setup-deno@v2
