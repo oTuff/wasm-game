@@ -1,1 +1,18 @@
-
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Bevy Wasm Example</title>
+    <style>
+      canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    </style>
+  </head>
+  <script type="module">
+    import init, { run_bevy_app } from "./pkg/rust_bevy.js";
+    await init();
+    run_bevy_app();
+  </script>
+</html>
