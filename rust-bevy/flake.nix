@@ -29,7 +29,6 @@
             rustfmt
             pkg-config
             pkgs.nixgl.nixVulkanIntel # nixGLIntel
-            # vulkan-tools
           ];
 
           buildInputs = with pkgs; [
@@ -39,9 +38,8 @@
             xorg.libX11
             xorg.libXcursor
             xorg.libXi
-            xorg.libXrandr # To use the x11 feature
+            xorg.libXrandr
             libxkbcommon
-            # wayland # To use the wayland feature
           ];
           LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
         };
