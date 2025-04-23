@@ -8,6 +8,6 @@ default:
 run: # run the program
 	nixVulkanIntel cargo run
 
-
-# .PHONY: build
-# build: # build to wasm
+.PHONY: build
+build: # build to wasm
+	wasm-pack build --target web

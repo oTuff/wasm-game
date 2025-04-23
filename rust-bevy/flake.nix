@@ -27,8 +27,10 @@
             cargo
             rust-analyzer
             rustfmt
+            wasm-pack
             pkg-config
             pkgs.nixgl.nixVulkanIntel # nixGLIntel
+            lld
           ];
 
           buildInputs = with pkgs; [

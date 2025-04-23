@@ -79,6 +79,12 @@ export function ExampleRust() {
   return (
     <div>
       <h1>Rust WASM Example</h1>
+      <iframe
+        src="/rust-bevy/public/main.html"
+        width="640"
+        height="480"
+      >
+      </iframe>
     </div>
   );
 }

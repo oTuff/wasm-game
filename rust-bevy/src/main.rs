@@ -1,35 +1,6 @@
-use bevy::prelude::*;
+use rust_bevy::run_bevy_app;
 
 fn main() {
-    App::new()
-        .add_plugins(DefaultPlugins)
-        .add_systems(Startup, setup)
-        .run();
+    run_bevy_app();
 }
 
-#[derive(Component)]
-struct ColorText;
-
-fn setup(mut commands: Commands) {
-    // UI camera
-    commands.spawn(Camera2d);
-    // Text with one section
-    commands.spawn((
-        // Accepts a `String` or any type that converts into a `String`, such as `&str`
-        Text::new("hello\nbevy!"),
-        TextFont {
-            font_size: 67.0,
-            ..default()
-        },
-        // Set the justification of the Text
-        TextLayout::new_with_justify(JustifyText::Center),
-        // Set the style of the Node itself.
-        Node {
-            position_type: PositionType::Absolute,
-            bottom: Val::Px(5.0),
-            right: Val::Px(5.0),
-            ..default()
-        },
-        ColorText,
-    ));
-}
