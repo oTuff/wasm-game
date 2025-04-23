@@ -16,6 +16,7 @@ jobs:
       go_ebitengine: ${{ steps.filter.outputs.go_ebitengine }}
       rust_bevy: ${{ steps.filter.outputs.rust_bevy }}
     steps:
+      - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: filter
         with:
