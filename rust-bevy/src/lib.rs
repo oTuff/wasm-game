@@ -42,4 +42,3 @@ fn setup(mut commands: Commands) {
         ColorText,
     ));
 }
-
