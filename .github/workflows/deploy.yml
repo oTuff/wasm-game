@@ -6,8 +6,24 @@ on:
     branches: main
 
 jobs:
-  build:
+  # changes:
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     go_ebitengine: ${{ steps.filter.outputs.go_ebitengine }}
+  #     rust_bevy: ${{ steps.filter.outputs.rust_bevy }}
+  #   steps:
+  #     - uses: dorny/paths-filter@v3
+  #       id: filter
+  #       with:
+  #         filters: |
+  #           go_ebitengine:
+  #             - 'go-ebitengine/**'
+  #           rust_bevy:
+  #             - 'rust-bevy/**'
+  build_go:
     runs-on: ubuntu-latest
+    # needs: changes
+    # if: needs.changes.outputs.go_ebitengine == 'true'
 
     defaults:
       run:
@@ -45,10 +61,43 @@ jobs:
           name: game-wasm
           path: ${{ github.workspace }}/go-ebitengine/public/game.wasm
 
+  build_rust:
+    runs-on: ubuntu-latest
+    # needs: changes
+    # if: needs.changes.outputs.rust_bevy == 'true'
+
+    defaults:
+      run:
+        working-directory: ./rust-bevy
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions/toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl -sSfL https://rustwasm.github.io/wasm-pack/installer/init.sh | sh -s -- -y
+
+      - name: Build with wasm-pack
+        run: wasm-pack build --target web
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: wasm-pack
+          path: pkg
+          # path: ${{ github.workspace }}/rust-bevy/pkg
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build_go, build_rust]
+    # if: always()
 
     permissions:
       id-token: write # Needed for auth with Deno Deploy
@@ -58,11 +107,17 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v4
 
-      - name: Download wasm file
+      - name: Download go wasm file
         uses: actions/download-artifact@v4
         with:
           name: game-wasm
           path: ./go-ebitengine/public
+
+      - name: Download rust wasm file
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-pack
+          path: ./rust-bevy/public
 
       - name: Install Deno
         uses: denoland/setup-deno@v2
