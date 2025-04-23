@@ -36,22 +36,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('go-ebitengine/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      # - name: Cache Go modules
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: |
+      #       ~/.cache/go-build
+      #       ~/go/pkg/mod
+      #     key: ${{ runner.os }}-go-${{ hashFiles('go-ebitengine/go.sum') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-go-
 
-      - name: Cache built Go WASM
-        id: cache-go-wasm
-        uses: actions/cache@v4
-        with:
-          path: public/game.wasm
-          key: ${{ runner.os }}-go-wasm-${{ hashFiles('**/*.go') }}
+      # - name: Cache built Go WASM
+      #   id: cache-go-wasm
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: public/game.wasm
+      #     key: ${{ runner.os }}-go-wasm-${{ hashFiles('**/*.go') }}
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -104,12 +104,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Cache built Rust WASM
-        id: cache-rust-wasm
-        uses: actions/cache@v4
-        with:
-          path: pkg
-          key: ${{ runner.os }}-rust-wasm-${{ hashFiles('src/**') }}
+      # - name: Cache built Rust WASM
+      #   id: cache-rust-wasm
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: pkg
+      #     key: ${{ runner.os }}-rust-wasm-${{ hashFiles('src/**') }}
 
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -126,7 +126,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wasm-pack
-          path: /rust-bevy/pkg
+          path: rust-bevy/pkg
 
   deploy:
     name: Deploy
