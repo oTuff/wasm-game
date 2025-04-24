@@ -14,7 +14,7 @@ dev = [
   "bevy/multi_threaded",
   "bevy/x11",
 ]
-default = ["console_error_panic_hook"]
+# default = ["console_error_panic_hook"]
 
 [dependencies]
 wasm-bindgen = "0.2.84"
@@ -23,11 +23,13 @@ log = { version = "0.4", features = [
   "release_max_level_warn",
 ] }
 
+
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
-console_error_panic_hook = { version = "0.1.7", optional = true }
+# console_error_panic_hook = { version = "0.1.7", optional = true }
+# bevy = { version = "0.15.3" }
 bevy = { version = "0.15.3", default-features = false, features = [
   "bevy_winit",
   "bevy_render",
@@ -35,17 +37,27 @@ bevy = { version = "0.15.3", default-features = false, features = [
   "default_font",
   "bevy_ui",
   "webgl2",
-  # "bevy_asset",
+  "bevy_asset",
+  "png",
   # "bevy_audio",
   # "bevy_core_pipeline",
   # "bevy_gltf",
-  # "png",
   # "ktx2",
   # "vorbis",
 ] }
 
+# bevy_embedded_assets = "0.12.0"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz"]
+# wasm-opt = ["-Oz", "--enable-mutable-globals"]
+
+# [package.metadata.wasm-pack.profile.release]
+# wasm-opt = ["-O4", "--flexible-inline-max-function-size", "4294967295"]
+
 [dev-dependencies]
 wasm-bindgen-test = "0.3.34"
+console_error_panic_hook = "0.1.7"
 
 [profile.dev]
 debug = 0
@@ -54,7 +66,7 @@ opt-level = 0       # Switch to 1 for more runtime performance
 
 [profile.release]
 # Tell `rustc` to optimize for small code size and other optimizations
-opt-level = "s"
+opt-level = "z"
 panic = 'abort'
 debug = 0
 strip = true
