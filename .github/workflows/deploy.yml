@@ -25,7 +25,6 @@ jobs:
   #             - 'go-ebitengine/**'
   #           rust_bevy:
   #             - 'rust-bevy/**'
-
   build_go:
     runs-on: ubuntu-latest
     # needs: changes
@@ -99,6 +98,24 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
+      - name: Install latest binaryen (wasm-opt)
+        run: |
+          wget https://github.com/WebAssembly/binaryen/releases/download/version_116/binaryen-version_116-x86_64-linux.tar.gz
+          tar -xzf binaryen-version_116-x86_64-linux.tar.gz
+          sudo cp binaryen-version_116/bin/wasm-opt /usr/local/bin/
+
+      # - name: Install wasm-bindgen-cli from GitHub release
+      #   run: |
+      #     WASM_BINDGEN_VERSION=0.2.84  # Match the Cargo.toml version!
+      #     wget https://github.com/rustwasm/wasm-bindgen/releases/download/${WASM_BINDGEN_VERSION}/wasm-bindgen-${WASM_BINDGEN_VERSION}-x86_64-unknown-linux-musl.tar.gz
+      #     tar -xzf wasm-bindgen-${WASM_BINDGEN_VERSION}-x86_64-unknown-linux-musl.tar.gz
+      #     sudo cp wasm-bindgen-${WASM_BINDGEN_VERSION}-x86_64-unknown-linux-musl/wasm-bindgen* /usr/local/bin/
+      # # - name: Install System Dependencies
+      #   run: |
+      #     cargo install wasm-bindgen-cli --force
+      #     # sudo apt-get update
+      #     # sudo apt-get install -y binaryen
+
       - name: Install wasm-pack
         run: curl -sSfL https://rustwasm.github.io/wasm-pack/installer/init.sh | sh -s -- -y
 
@@ -171,4 +188,3 @@ jobs:
           project: "otuff-wasm-game-36"
           entrypoint: "server.tsx"
           root: "."
-

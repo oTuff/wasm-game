@@ -31,6 +31,8 @@
             pkg-config
             pkgs.nixgl.nixVulkanIntel # nixGLIntel
             lld
+            wasm-bindgen-cli
+            binaryen # for wasm-opt
           ];
 
           buildInputs = with pkgs; [
