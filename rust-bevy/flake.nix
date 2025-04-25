@@ -23,6 +23,11 @@
       {
         devShell = pkgs.mkShell rec {
           nativeBuildInputs = with pkgs; [
+            busybox
+            gnumake
+            bmake
+            pdpmake
+
             rustc
             cargo
             rust-analyzer
