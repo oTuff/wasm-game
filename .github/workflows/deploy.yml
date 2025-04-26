@@ -168,7 +168,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: wasm-pack
-          path: ./rust-bevy/pkg
+          path: ./rust-bevy/public/pkg
 
       # - name: Restore cached Rust WASM
       #   if: needs.changes.outputs.rust_bevy != 'true'
