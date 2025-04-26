@@ -1,33 +1,49 @@
 use bevy::{
+    asset::AssetMetaCheck,
     diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin},
     prelude::*,
+    winit::{UpdateMode, WinitSettings},
 };
 use fastrand;
 use wasm_bindgen::prelude::*;
 
 const SCREEN_WIDTH: f32 = 640.0;
 const SCREEN_HEIGHT: f32 = 480.0;
-const UPPER_BOUND: i32 = 40; // Amount of pixels from the top
+const UPPER_BOUND: f32 = 40.0; // Amount of pixels from the top
 const BUNNY_SCALE: f32 = 0.2;
 
 #[wasm_bindgen]
 pub fn run_bevy_app() {
     App::new()
-        // Set window resolution
         .add_plugins((
-            DefaultPlugins.set(WindowPlugin {
-                primary_window: Some(Window {
-                    resolution: (SCREEN_WIDTH, SCREEN_HEIGHT).into(),
+            DefaultPlugins
+                // set window resolution
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        resolution: (SCREEN_WIDTH, SCREEN_HEIGHT).into(),
+                        ..default()
+                    }),
+                    ..default()
+                })
+                // don't look for `.meta` files
+                .set(AssetPlugin {
+                    meta_check: AssetMetaCheck::Never,
                     ..default()
                 }),
-                ..default()
-            }),
             FrameTimeDiagnosticsPlugin::default(),
         ))
+        // fix framerate in wasm when unfocused
+        .insert_resource(WinitSettings {
+            focused_mode: UpdateMode::Continuous,
+            unfocused_mode: UpdateMode::Continuous,
+        })
+        // set background color
+        .insert_resource(ClearColor(Color::BLACK))
         .add_systems(Startup, setup)
+        .add_systems(Update, initialize_bunny_image_data)
         .add_systems(
-            Update,
-            (update_fps_text, initialize_bunny_image_data, spawn_bunny),
+            FixedUpdate,
+            (update_positions, check_boundaries, update_diagnostics_text),
         )
         .run();
 }
@@ -63,7 +79,8 @@ struct Velocity {
 #[derive(Bundle, Default)]
 struct BunnyBundle {
     bunny: Bunny,
-    sprite_bundle: SpriteBundle,
+    sprite: Sprite,
+    transform: Transform,
     velocity: Velocity,
 }
 
@@ -72,84 +89,6 @@ struct BunnyImage {
     handle: Handle<Image>,
     width: f32,
     height: f32,
-}
-
-fn initialize_bunny_image_data(
-    mut my_image: ResMut<BunnyImage>,
-    images: Res<Assets<Image>>,
-    mut ev_asset: EventReader<AssetEvent<Image>>,
-) {
-    if my_image.width != 0.0 {
-        info!("not running anymore");
-        return;
-    }
-    for event in ev_asset.read() {
-        match event {
-            AssetEvent::Added { id } => {
-                info!("Asset added with id: {:?}", id);
-
-                if let Some(image) = images.get(*id) {
-                    let size = image.size_f32();
-                    my_image.width = size.x;
-                    my_image.height = size.y;
-                    info!("Loaded image size: {} x {}", size.x, size.y);
-                }
-            }
-            AssetEvent::LoadedWithDependencies { id } => {
-                info!("Asset loaded with dependencies with id: {:?}", id);
-                if let Some(image) = images.get(*id) {
-                    let size = image.size_f32();
-                    my_image.width = size.x;
-                    my_image.height = size.y;
-                    info!(
-                        "Loaded(with dependencies) image size: {} x {}",
-                        size.x, size.y
-                    );
-                }
-            }
-            AssetEvent::Modified { id } => {
-                info!("Asset modified with id: {:?}", id);
-            }
-            AssetEvent::Removed { id } => {
-                info!("Asset removed with id: {:?}", id);
-            }
-            AssetEvent::Unused { id } => {
-                info!(
-                    "Asset unused (last strong handle dropped) with id: {:?}",
-                    id
-                );
-            }
-        }
-    }
-}
-
-fn spawn_bunny(mut commands: Commands, my_image: Res<BunnyImage>) {
-    let texture_handle = my_image.handle.clone();
-
-    let position = Vec3::new(
-        -SCREEN_WIDTH / 2.0 + (my_image.width / 2.0 * BUNNY_SCALE),
-        SCREEN_HEIGHT / 2.0 - (my_image.height / 2.0 * BUNNY_SCALE),
-        0.0,
-    );
-
-    let velocity = Velocity {
-        x: fastrand::f32() * 2.0 + 2.0,
-        y: fastrand::f32() * 2.0 + 2.0,
-    };
-
-    commands.spawn(BunnyBundle {
-        sprite_bundle: SpriteBundle {
-            sprite: texture_handle.into(),
-            transform: Transform {
-                translation: position,
-                scale: Vec3::splat(BUNNY_SCALE),
-                ..default()
-            },
-            ..default()
-        },
-        velocity,
-        ..default()
-    });
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -168,8 +107,104 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((Text::new("FPS:"), ColorText));
 }
 
+// Get the image size
+fn initialize_bunny_image_data(
+    commands: Commands,
+    mut bunny_image: ResMut<BunnyImage>,
+    images: Res<Assets<Image>>,
+) {
+    // stop running once the width(and height) is set by this system
+    if bunny_image.width != 0.0 {
+        return;
+    }
+    // get the width and height of the image
+    if let Some(image) = images.get(&mut bunny_image.handle) {
+        let size = image.size_f32();
+        bunny_image.width = size.x;
+        bunny_image.height = size.y;
+    }
+    spawn_bunnies(10, commands, bunny_image.into());
+}
+
+fn spawn_bunnies(amount: u32, mut commands: Commands, bunny_image: Res<BunnyImage>) {
+    // let bunny_handle = &bunny_image.handle;
+    // let bunny_handle = bunny_image.handle.clone();
+
+    for _ in 0..amount {
+        // set the initial position
+        let position = Vec3::new(
+            -SCREEN_WIDTH / 2.0 + (bunny_image.width / 2.0 * BUNNY_SCALE) + fastrand::f32() * 5.0,
+            SCREEN_HEIGHT / 2.0 - (bunny_image.height / 2.0 * BUNNY_SCALE) - fastrand::f32() * 5.0,
+            0.0,
+        );
+
+        let velocity = Velocity {
+            x: fastrand::f32() * 2.0 + 2.0,
+            y: fastrand::f32() * 2.0 + 2.0,
+        };
+
+        commands.spawn(BunnyBundle {
+            sprite: Sprite {
+                // image: bunny_handle.clone(),
+                image: bunny_image.handle.clone(),
+                custom_size: Some(Vec2::new(
+                    bunny_image.width * BUNNY_SCALE,
+                    bunny_image.height * BUNNY_SCALE,
+                )),
+                ..default()
+            },
+            transform: Transform {
+                translation: position,
+                ..default()
+            },
+            velocity,
+            ..default()
+        });
+    }
+}
+
+fn update_positions(
+    // time: Res<Time>,
+    mut bunny_query: Query<(&mut Velocity, &mut Transform), With<Bunny>>,
+) {
+    for (mut velocity, mut transform) in bunny_query.iter_mut() {
+        transform.translation.x += velocity.x; // * time.delta_secs();
+        transform.translation.y += velocity.y; // * time.delta_secs();
+        velocity.y -= 0.75; // hardcoded gravity
+    }
+}
+
+fn check_boundaries(
+    mut bunny_query: Query<(&mut Velocity, &mut Transform), With<Bunny>>,
+    bunny_image: ResMut<BunnyImage>,
+) {
+    let scaled_width = bunny_image.width / 2.0 * BUNNY_SCALE;
+    let scaled_height = bunny_image.height / 2.0 * BUNNY_SCALE;
+
+    for (mut velocity, mut transform) in bunny_query.iter_mut() {
+        if transform.translation.x > SCREEN_WIDTH / 2.0 - scaled_width
+            || transform.translation.x < -SCREEN_WIDTH / 2.0 + scaled_width
+        {
+            velocity.x = -velocity.x;
+        }
+
+        if transform.translation.y < -SCREEN_HEIGHT / 2.0 + scaled_height {
+            transform.translation.y = -SCREEN_HEIGHT / 2.0 + scaled_height;
+            velocity.y = -velocity.y;
+        }
+        if transform.translation.y > SCREEN_HEIGHT / 2.0 - UPPER_BOUND - scaled_height
+            && velocity.y > 0.0
+        {
+            velocity.y *= 0.7;
+        }
+    }
+}
+
+// TODO: implement
+// fn input_system()
+
 // Debug information
-fn update_fps_text(
+fn update_diagnostics_text(
     diagnostics: Res<DiagnosticsStore>,
     mut writer: TextUiWriter,
     text_query: Query<Entity, With<ColorText>>,
@@ -177,7 +212,7 @@ fn update_fps_text(
     if let Some(fps_diag) = diagnostics.get(&FrameTimeDiagnosticsPlugin::FPS) {
         if let Some(fps) = fps_diag.smoothed() {
             for entity in &text_query {
-                *writer.text(entity, 0) = format!("FPS: {:.1}", fps);
+                *writer.text(entity, 0) = format!("FPS: {:.0}", fps);
             }
         }
     }
