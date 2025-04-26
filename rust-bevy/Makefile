@@ -8,7 +8,7 @@ run: # run the program
 .PHONY: run
 
 build: # build to wasm
-	wasm-pack build --target web
+	wasm-pack build --target web --out-dir public/pkg
 .PHONY: build
 
 # .PHONY: release

@@ -3178,6 +3178,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "console_error_panic_hook",
+ "fastrand",
  "log",
  "wasm-bindgen",
  "wasm-bindgen-test",
