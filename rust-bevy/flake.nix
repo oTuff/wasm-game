@@ -38,6 +38,8 @@
             lld
             wasm-bindgen-cli
             binaryen # for wasm-opt
+            mold
+            cargo-zigbuild
           ];
 
           buildInputs = with pkgs; [
