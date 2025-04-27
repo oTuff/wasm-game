@@ -22,7 +22,6 @@ log = { version = "0.4", features = [
   "max_level_debug",
   "release_max_level_warn",
 ] }
-
 console_error_panic_hook = { version = "0.1.7", optional = true }
 bevy = { version = "0.15.3", default-features = false, features = [
   "bevy_winit",
@@ -31,14 +30,43 @@ bevy = { version = "0.15.3", default-features = false, features = [
   "png",
   "default_font",
 ] }
-# rand = "0.9.1"
 fastrand = "2.3.0"
 
 [package.metadata.wasm-pack.profile.release]
 # wasm-opt = ["-Oz"]
-wasm-opt = ["-Oz", "--vacuum", "--strip-debug", "--strip-dwarf"]
-# wasm-opt = ["-Oz", "--enable-mutable-globals"]
-# wasm-opt = ["-O4", "--flexible-inline-max-function-size", "4294967295"]
+# wasm-opt = false
+
+### small binary size
+wasm-opt = [
+  "-Oz",
+  "--dce",
+  "--vacuum",
+  "--strip-debug",
+  "--strip-dwarf",
+  # "--fast-math",
+  # "--enable-simd",
+  # "--coalesce-locals",
+  # "--remove-unused-module-elements",
+  # "--minify-imports-and-exports",
+  # "--converge", # super slow
+  # "--flatten",  # do not use this(slow and larger size) but not super slow with --rereloop
+  # "--rereloop", # needs --flatten
+  # "--enable-mutable-globals", # Allow mutable globals for certain optimizations (if applicable)
+]
+
+### high performance
+# wasm-opt = [
+#   # "-O3",
+#   "-O4",
+#   "--vacuum",
+#   "--fast-math",
+#   "--flatten",
+#   "--rereloop",
+#   "--coalesce-locals",
+#   "--enable-mutable-globals",
+#   "--flexible-inline-max-function-size",
+#   "4294967295",
+# ]
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.34"
@@ -46,13 +74,29 @@ wasm-bindgen-test = "0.3.34"
 [profile.dev]
 debug = 0
 strip = "debuginfo"
-opt-level = 0       # Switch to 1 for more runtime performance
+opt-level = 0
 
+### small binary size
 [profile.release]
-# Tell `rustc` to optimize for small code size and other optimizations
 opt-level = "z"
 panic = 'abort'
-debug = 0
 strip = true
-lto = "thin"
+# lto = "off"
+# lto = "thin"
+lto = "fat"
 codegen-units = 1
+# codegen-units = 16
+rpath = false
+debug = 0
+incremental = false
+
+## high performance
+# [profile.release]
+# opt-level = 3
+# panic = 'abort'
+# debug = 0
+# strip = true
+# lto = "fat"
+# rpath = false
+# codegen-units = 1
+# incremental = false
