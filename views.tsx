@@ -93,6 +93,13 @@ export function ExampleJS() {
   return (
     <div>
       <h1>JavaScript Example</h1>
+      <iframe
+        src="/js-phaser/public/main.html"
+        width="640"
+        height="480"
+        scrolling="no"
+      >
+      </iframe>
     </div>
   );
 }
