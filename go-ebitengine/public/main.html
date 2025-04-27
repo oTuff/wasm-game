@@ -13,6 +13,9 @@
       // change to make workflow build go wasm
 
       const go = new Go();
+      // go.env = {
+      //   "GOGC": "20",
+      // };
 
       WebAssembly.instantiateStreaming(
         fetch("game.wasm"),
@@ -24,9 +27,9 @@
       });
 
       // Other metrics
-      const metrics = new PerformanceMetrics();
-      metrics.start();
-      metrics.logWasmSize("/go-ebitengine/public/game.wasm");
+      // const metrics = new PerformanceMetrics();
+      // metrics.start();
+      // metrics.logWasmSize("/go-ebitengine/public/game.wasm");
     </script>
   </body>
 </html>
