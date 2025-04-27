@@ -34,6 +34,9 @@
             xorg.libXxf86vm
             alsa-lib
             pkg-config
+            tinygo
+            twiggy
+            binaryen
           ];
 
           shellHook = with pkgs; ''
