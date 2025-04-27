@@ -40,7 +40,7 @@ pub fn run_bevy_app() {
         // set background color
         .insert_resource(ClearColor(Color::BLACK))
         .add_systems(Startup, setup)
-        .add_systems(Update, initialize_bunny_image_data)
+        .add_systems(Update, (initialize_bunny_image_data, input_system))
         .add_systems(
             FixedUpdate,
             (update_positions, check_boundaries, update_diagnostics_text),
@@ -104,7 +104,14 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 
     // Debug text
-    commands.spawn((Text::new("FPS:"), ColorText));
+    commands.spawn((
+        Text::new(""),
+        TextFont {
+            font_size: 11.0,
+            ..default()
+        },
+        ColorText,
+    ));
 }
 
 // Get the image size
@@ -127,9 +134,6 @@ fn initialize_bunny_image_data(
 }
 
 fn spawn_bunnies(amount: u32, mut commands: Commands, bunny_image: Res<BunnyImage>) {
-    // let bunny_handle = &bunny_image.handle;
-    // let bunny_handle = bunny_image.handle.clone();
-
     for _ in 0..amount {
         // set the initial position
         let position = Vec3::new(
@@ -145,7 +149,6 @@ fn spawn_bunnies(amount: u32, mut commands: Commands, bunny_image: Res<BunnyImag
 
         commands.spawn(BunnyBundle {
             sprite: Sprite {
-                // image: bunny_handle.clone(),
                 image: bunny_image.handle.clone(),
                 custom_size: Some(Vec2::new(
                     bunny_image.width * BUNNY_SCALE,
@@ -163,13 +166,10 @@ fn spawn_bunnies(amount: u32, mut commands: Commands, bunny_image: Res<BunnyImag
     }
 }
 
-fn update_positions(
-    // time: Res<Time>,
-    mut bunny_query: Query<(&mut Velocity, &mut Transform), With<Bunny>>,
-) {
+fn update_positions(mut bunny_query: Query<(&mut Velocity, &mut Transform), With<Bunny>>) {
     for (mut velocity, mut transform) in bunny_query.iter_mut() {
-        transform.translation.x += velocity.x; // * time.delta_secs();
-        transform.translation.y += velocity.y; // * time.delta_secs();
+        transform.translation.x += velocity.x;
+        transform.translation.y += velocity.y;
         velocity.y -= 0.75; // hardcoded gravity
     }
 }
@@ -200,19 +200,53 @@ fn check_boundaries(
     }
 }
 
-// TODO: implement
-// fn input_system()
+fn input_system(
+    mouse_button_input: Res<ButtonInput<MouseButton>>,
+    commands: Commands,
+    bunny_image: ResMut<BunnyImage>,
+    bunnies: Query<(), With<Bunny>>,
+) {
+    let bunny_count = bunnies.iter().count() as u32;
+
+    if mouse_button_input.pressed(MouseButton::Left) {
+        spawn_bunnies(1, commands, bunny_image.into());
+    } else if mouse_button_input.just_pressed(MouseButton::Middle) {
+        let mut to_add = 1000 - (bunny_count % 1000);
+        if to_add == 0 {
+            to_add = 1000;
+        }
+        spawn_bunnies(to_add, commands, bunny_image.into());
+    } else if mouse_button_input.just_pressed(MouseButton::Right) {
+        let mut to_add = 100 - (bunny_count % 100);
+        if to_add == 0 {
+            to_add = 100;
+        }
+        spawn_bunnies(to_add, commands, bunny_image.into());
+    }
+}
 
 // Debug information
 fn update_diagnostics_text(
     diagnostics: Res<DiagnosticsStore>,
     mut writer: TextUiWriter,
     text_query: Query<Entity, With<ColorText>>,
+    fixed_time: Res<Time<Fixed>>,
+    bunnies: Query<(), With<Bunny>>,
 ) {
+    let bunny_count = bunnies.iter().count();
+    let fixed_delta = fixed_time.delta_secs_f64();
+    let tickrate = if fixed_delta > 0.0 {
+        1.0 / fixed_delta
+    } else {
+        0.0
+    };
     if let Some(fps_diag) = diagnostics.get(&FrameTimeDiagnosticsPlugin::FPS) {
         if let Some(fps) = fps_diag.smoothed() {
             for entity in &text_query {
-                *writer.text(entity, 0) = format!("FPS: {:.0}", fps);
+                *writer.text(entity, 0) = format!(
+                    "FPS: {:.0}\nTPS: {:.0}\nbunnies: {}",
+                    fps, tickrate, bunny_count
+                );
             }
         }
     }

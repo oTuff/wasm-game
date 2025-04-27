@@ -34,8 +34,6 @@ fastrand = "2.3.0"
 
 [package.metadata.wasm-pack.profile.release]
 # wasm-opt = ["-Oz"]
-# wasm-opt = false
-
 ### small binary size
 wasm-opt = [
   "-Oz",
@@ -68,6 +66,9 @@ wasm-opt = [
 #   "4294967295",
 # ]
 
+### purely compile speed
+# wasm-opt = false
+
 [dev-dependencies]
 wasm-bindgen-test = "0.3.34"
 
@@ -76,8 +77,8 @@ debug = 0
 strip = "debuginfo"
 opt-level = 0
 
-### small binary size
 [profile.release]
+### small binary size
 opt-level = "z"
 panic = 'abort'
 strip = true
@@ -90,8 +91,7 @@ rpath = false
 debug = 0
 incremental = false
 
-## high performance
-# [profile.release]
+### high performance
 # opt-level = 3
 # panic = 'abort'
 # debug = 0
@@ -100,3 +100,11 @@ incremental = false
 # rpath = false
 # codegen-units = 1
 # incremental = false
+
+### purely compile speed
+# opt-level = 0
+# strip = false
+# incremental = true
+# lto = "off"
+# codegen-units = 16
+# debug = 0
