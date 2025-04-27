@@ -129,8 +129,8 @@ fn initialize_bunny_image_data(
         let size = image.size_f32();
         bunny_image.width = size.x;
         bunny_image.height = size.y;
+        spawn_bunnies(10, commands, bunny_image.into());
     }
-    spawn_bunnies(10, commands, bunny_image.into());
 }
 
 fn spawn_bunnies(amount: u32, mut commands: Commands, bunny_image: Res<BunnyImage>) {
@@ -231,7 +231,7 @@ fn update_diagnostics_text(
     mut writer: TextUiWriter,
     text_query: Query<Entity, With<ColorText>>,
     fixed_time: Res<Time<Fixed>>,
-    bunnies: Query<(), With<Bunny>>,
+    bunnies: Query<(&mut Velocity, &mut Transform), With<Bunny>>,
 ) {
     let bunny_count = bunnies.iter().count();
     let fixed_delta = fixed_time.delta_secs_f64();
