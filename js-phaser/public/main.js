@@ -9,6 +9,12 @@ const bunnyScale = 0.2;
 class Example extends Phaser.Scene {
   constructor() {
     super();
+    // Fixed tickrate at 60 updates per second
+    this.tickrate = 1000 / 60;
+    this.accumulator = 0;
+    this.ticks = 0;
+    this.frameTime = 0;
+    this.frames = 0;
   }
 
   preload() {
@@ -43,48 +49,64 @@ class Example extends Phaser.Scene {
   }
 
   update(time, delta) {
-    if (this.input.activePointer.isDown) {
-      for (let i = 0; i < 10; ++i) {
-        this.launch();
+    this.accumulator += delta;
+
+    while (this.accumulator >= this.tickrate) {
+      this.accumulator -= this.tickrate;
+      this.ticks++;
+
+      // Update logic at fixed interval
+      if (this.input.activePointer.isDown) {
+        for (let i = 0; i < 10; ++i) {
+          this.launch();
+        }
       }
+
+      Phaser.Actions.Call(bunnies.getChildren(), (bunny) => {
+        bunny.x += bunny.vx;
+        bunny.y += bunny.vy;
+        bunny.vy += gravity;
+
+        const maxX = screenWidth - bunny.widthScaled;
+        const maxY = screenHeight - bunny.heightScaled;
+
+        // Bounce horizontally
+        if (bunny.x < 0) {
+          bunny.x = 0;
+          bunny.vx = -bunny.vx;
+        } else if (bunny.x > maxX) {
+          bunny.x = maxX;
+          bunny.vx = -bunny.vx;
+        }
+
+        // Bounce vertically
+        if (bunny.y > maxY) {
+          bunny.y = maxY;
+          bunny.vy = -bunny.vy;
+        } else if (bunny.y < upperBound && bunny.vy < 0) {
+          bunny.vy *= 0.7;
+        }
+      });
     }
 
-    Phaser.Actions.Call(bunnies.getChildren(), (bunny) => {
-      bunny.x += bunny.vx;
-      bunny.y += bunny.vy;
-      bunny.vy += gravity;
+    this.frames++;
+    this.frameTime += delta;
 
-      const maxX = screenWidth - bunny.widthScaled;
-      const maxY = screenHeight - bunny.heightScaled;
+    if (this.frameTime >= 1000) {
+      const fps = this.frames;
+      const tps = this.ticks;
 
-      // Bounce horizontally
-      if (bunny.x < 0) {
-        bunny.x = 0;
-        bunny.vx = -bunny.vx;
-      } else if (bunny.x > maxX) {
-        bunny.x = maxX;
-        bunny.vx = -bunny.vx;
-      }
+      this.frameTime = 0;
+      this.frames = 0;
 
-      // Bounce vertically
-      if (bunny.y > maxY) {
-        bunny.y = maxY;
-        bunny.vy = -bunny.vy;
-      } else if (bunny.y < upperBound && bunny.vy < 0) {
-        bunny.vy *= 0.7;
-      }
-    });
+      this.ticks = 0;
 
-    // Diagnostics
-    const fps = this.game.loop.actualFps.toFixed(0);
-    const tps = (1000 / delta).toFixed(0);
-    const bunnyCount = bunnies.getChildren().length;
-
-    this.diagnostics.setText([
-      `FPS: ${fps}`,
-      `TPS: ${tps}`,
-      `Bunnies: ${bunnyCount}`,
-    ]);
+      this.diagnostics.setText([
+        `FPS: ${fps}`,
+        `TPS: ${tps}`,
+        `Bunnies: ${bunnies.getChildren().length}`,
+      ]);
+    }
   }
 }
 
@@ -94,10 +116,7 @@ const config = {
   scene: [Example],
   width: screenWidth,
   height: screenHeight,
-  render: {
-    pixelArt: true,
-    canvas: document.createElement("canvas"),
-  },
+  pixelArt: true,
 };
 
 const game = new Phaser.Game(config);
