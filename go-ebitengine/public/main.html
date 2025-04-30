@@ -22,8 +22,13 @@
       ).then((result) => {
         go.run(result.instance);
 
-        // TODO use metrics from golang
-        console.log(getGoMetrics());
+        setInterval(async () => {
+          try {
+            console.log(getGoMetrics());
+          } catch (err) {
+            console.error("Failed to get metrics:", err);
+          }
+        }, 1000);
 
         // PerformanceMetrics.markWasmEndAndLog(); // Track WASM load time
       });
