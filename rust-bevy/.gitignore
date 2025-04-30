@@ -16,4 +16,5 @@ target/
 /target
 bin/
 pkg/
+public/pkg/
 wasm-pack.log

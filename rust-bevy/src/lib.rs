@@ -5,6 +5,9 @@ use bevy::{
     winit::{UpdateMode, WinitSettings},
 };
 use fastrand;
+use once_cell::sync::Lazy;
+use serde::{Deserialize, Serialize};
+use std::sync::RwLock;
 use wasm_bindgen::prelude::*;
 
 const SCREEN_WIDTH: f32 = 640.0;
@@ -225,6 +228,16 @@ fn input_system(
     }
 }
 
+#[derive(Serialize, Deserialize, Default)]
+pub struct Metrics {
+    pub fps: f64,
+    pub tps: f64,
+    pub bunnies: usize,
+}
+
+// Lazily initializes `RwLock<Metrics>` for thread-safe access to metrics
+static GLOBAL_METRICS: Lazy<RwLock<Metrics>> = Lazy::new(|| RwLock::new(Metrics::default()));
+
 // Debug information
 fn update_diagnostics_text(
     diagnostics: Res<DiagnosticsStore>,
@@ -247,7 +260,20 @@ fn update_diagnostics_text(
                     "FPS: {:.0}\nTPS: {:.0}\nbunnies: {}",
                     fps, tickrate, bunny_count
                 );
+                if let Ok(mut metrics) = GLOBAL_METRICS.write() {
+                    metrics.fps = fps;
+                    metrics.tps = tickrate;
+                    metrics.bunnies = bunny_count;
+                }
             }
         }
     }
+}
+
+#[wasm_bindgen]
+pub fn get_rust_metrics() -> Result<JsValue, JsValue> {
+    let metrics = GLOBAL_METRICS
+        .read()
+        .map_err(|_| JsValue::from_str("Failed to read metrics"))?;
+    Ok(serde_wasm_bindgen::to_value(&*metrics)?)
 }
