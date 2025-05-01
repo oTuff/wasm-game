@@ -16,13 +16,13 @@ export class PerformanceMetrics {
     }
   }
 
-  constructor(metrics, name) {
+  constructor(metrics, lang) {
     this.frames = 0;
     this.lastSecond = performance.now();
     this.frameTimes = [];
     this.lastFrame = undefined;
     this.metrics = metrics;
-    this.name = name;
+    this.lang = lang;
     this.lastBunnyCount = 0;
     this.pendingInputTime = 0;
     this.lastMetrics = null;
@@ -124,13 +124,13 @@ export class PerformanceMetrics {
 
     if (!this.loggedHeader) {
       console.log(
-        ",name,browser,wasm_exec_ms,wasm_start_offset_ms,fps_js,fps_game,tps,bunnies,avg_frame,min_frame,max_frame,heap_mb,click_latency_ms",
+        ",lang,browser,wasm_exec_ms,wasm_start_offset_ms,fps_js,fps_game,tps,bunnies,avg_frame,min_frame,max_frame,heap_mb,click_latency_ms",
       );
       this.loggedHeader = true;
     }
 
     console.log([
-      "," + this.name,
+      "," + this.lang,
       `"${this.browser}"`,
       PerformanceMetrics.wasmExecDuration || "",
       PerformanceMetrics.wasmStartOffset || "",

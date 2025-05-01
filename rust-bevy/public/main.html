@@ -22,7 +22,7 @@
     PerformanceMetrics.markWasmEndAndLog();
     const metrics = new PerformanceMetrics(
       () => get_rust_metrics(),
-      "rust",
+      "Rust",
     );
     metrics.start();
     run_bevy_app();
