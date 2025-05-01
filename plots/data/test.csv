@@ -1,0 +1,17 @@
+performanceMetrics.js:133 ,lang,browser,wasm_exec_ms,wasm_start_offset_ms,fps_js,fps_game,tps,bunnies,avg_frame,min_frame,max_frame,heap_mb,click_latency_ms
+performanceMetrics.js:139 ,Go,"Chromium",215.20,36.90,183,159.82,54.94,10,5.50,0.80,6.40,138.70,
+performanceMetrics.js:139 ,Go,"Chromium",215.20,36.90,179,178.87,59.96,610,5.59,3.00,13.00,132.59,13.90
+performanceMetrics.js:139 ,Go,"Chromium",215.20,36.90,180,180.08,59.70,1210,5.57,4.80,9.10,115.28,14.90
+performanceMetrics.js:139 ,Go,"Chromium",215.20,36.90,144,150.85,59.94,1810,6.95,5.60,9.50,115.00,17.40
+performanceMetrics.js:139 ,Go,"Chromium",215.20,36.90,106,108.98,59.99,2410,9.53,8.10,11.40,115.55,16.60
+performanceMetrics.js:139 ,Go,"Chromium",215.20,36.90,82,83.56,60.68,3020,12.34,10.90,22.60,119.67,21.90
+performanceMetrics.js:139 ,Go,"Chromium",215.20,36.90,68,69.19,59.31,3620,14.83,13.40,16.50,119.99,13.70
+performanceMetrics.js:139 ,Go,"Chromium",215.20,36.90,58,58.83,59.83,4220,17.37,16.10,18.80,119.49,16.40
+performanceMetrics.js:139 ,Go,"Chromium",215.20,36.90,54,53.68,59.64,4220,18.68,18.50,19.30,119.79,16.40
+performanceMetrics.js:139 ,Go,"Chromium",215.20,36.90,54,52.98,59.98,4220,18.84,18.50,21.60,120.06,16.40
+performanceMetrics.js:139 ,Go,"Chromium",215.20,36.90,54,53.65,60.60,4220,18.64,18.40,19.40,119.58,16.40
+performanceMetrics.js:139 ,Go,"Chromium",215.20,36.90,54,53.73,59.70,4220,18.61,18.40,18.90,119.82,16.40
+performanceMetrics.js:139 ,Go,"Chromium",215.20,36.90,54,53.67,60.63,4220,18.63,18.50,18.90,120.12,16.40
+performanceMetrics.js:139 ,Go,"Chromium",215.20,36.90,54,53.35,59.28,4220,18.78,18.50,21.10,119.74,16.40
+performanceMetrics.js:139 ,Go,"Chromium",215.20,36.90,53,52.46,60.38,4220,19.02,18.50,27.60,119.98,16.40
+
