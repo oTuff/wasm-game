@@ -14,16 +14,15 @@
     <div id="phaser-example"></div>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
     <script src="./main.js"></script>
-    <script>
-      setInterval(async () => {
-        try {
-          console.log(
-            game.scene.scenes[0].metrics,
-          );
-        } catch (err) {
-          console.error("Failed to get metrics:", err);
-        }
-      }, 1000);
+    <script type="module">
+      import { PerformanceMetrics } from "/public/performanceMetrics.js";
+      const metrics = new PerformanceMetrics(
+        () => {
+          return game.scene.scenes[0].metrics;
+        },
+        "js",
+      );
+      metrics.start();
     </script>
   </body>
 </html>

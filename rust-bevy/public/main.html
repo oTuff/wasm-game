@@ -11,20 +11,20 @@
     </style>
   </head>
   <script type="module">
+    import { PerformanceMetrics } from "/public/performanceMetrics.js";
     import init, {
       get_rust_metrics,
       run_bevy_app,
     } from "./pkg/rust_bevy.js";
-    await init();
 
-    // poll metrics every second
-    setInterval(async () => {
-      try {
-        console.log("Metrics:", get_rust_metrics());
-      } catch (err) {
-        console.error("Failed to get metrics:", err);
-      }
-    }, 1000);
+    PerformanceMetrics.markWasmStart();
+    await init();
+    PerformanceMetrics.markWasmEndAndLog();
+    const metrics = new PerformanceMetrics(
+      () => get_rust_metrics(),
+      "rust",
+    );
+    metrics.start();
     run_bevy_app();
   </script>
 </html>
