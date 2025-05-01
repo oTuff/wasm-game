@@ -1,4 +1,7 @@
 export class PerformanceMetrics {
+  static wasmExecDuration = null;
+  static wasmStartOffset = null;
+
   static markWasmStart() {
     performance.mark("start");
   }
@@ -8,12 +11,8 @@ export class PerformanceMetrics {
     performance.measure("WASM execution", "start", "end");
     const entry = performance.getEntriesByName("WASM execution")[0];
     if (entry) {
-      const { name, duration, startTime } = entry;
-      console.log(
-        `${name} time: ${duration.toFixed(2)} ms (started at ${
-          startTime.toFixed(2)
-        } ms after page load)`,
-      );
+      PerformanceMetrics.wasmExecDuration = entry.duration.toFixed(2);
+      PerformanceMetrics.wasmStartOffset = entry.startTime.toFixed(2);
     }
   }
 
@@ -27,7 +26,16 @@ export class PerformanceMetrics {
     this.lastBunnyCount = 0;
     this.pendingInputTime = 0;
     this.lastMetrics = null;
+    this.latency = null;
     this.pollInterval = 1;
+    this.browser = (() => {
+      const ua = navigator.userAgent;
+      if (ua.includes("Firefox/")) return "Firefox";
+      if (ua.includes("Chrome/") && ua.includes("Safari/")) return "Chromium";
+      if (ua.includes("Safari/") && ua.includes("Version/")) return "GnomeWeb";
+      return ua;
+    })();
+    this.loggedHeader = false;
 
     this.tick = this.tick.bind(this);
   }
@@ -68,11 +76,10 @@ export class PerformanceMetrics {
 
         this.pendingInputTime = performance.now();
       } else {
-        console.log("stoped as fps was too low", this.frames);
+        // console.log("stoped as fps was too low", this.frames);
         const mouseUp = new MouseEvent("mouseup", eventOptions);
-        element.dispatchEvent(mouseUp);
-
         const pointerUp = new PointerEvent("pointerup", eventOptions);
+        element.dispatchEvent(mouseUp);
         element.dispatchEvent(pointerUp);
       }
 
@@ -92,8 +99,7 @@ export class PerformanceMetrics {
 
       if (this.pendingInputTime && this.lastMetrics) {
         if (metrics.bunnies > this.lastMetrics.bunnies) {
-          const delay = now - this.pendingInputTime;
-          console.log(`bunny spawn delay: ${delay.toFixed(2)} ms`);
+          this.latency = now - this.pendingInputTime;
           this.pendingInputTime = 0;
         }
       }
@@ -110,31 +116,33 @@ export class PerformanceMetrics {
       : 0;
     const minFrame = this.frameTimes.length ? Math.min(...this.frameTimes) : 0;
     const maxFrame = this.frameTimes.length ? Math.max(...this.frameTimes) : 0;
+    const memory = performance.memory
+      ? (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2)
+      : "";
 
-    let memoryMsg = "";
-    if (performance.memory) {
-      memoryMsg = ` | JS Heap Used: ${
-        (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2)
-      } MB`;
+    const game = this.metrics();
+
+    if (!this.loggedHeader) {
+      console.log(
+        ",name,browser,wasm_exec_ms,wasm_start_offset_ms,fps_js,fps_game,tps,bunnies,avg_frame,min_frame,max_frame,heap_mb,click_latency_ms",
+      );
+      this.loggedHeader = true;
     }
 
-    const browser = navigator.userAgentData
-      ? `${
-        navigator.userAgentData.brands.map((b) => b.brand + " " + b.version)
-          .join(", ")
-      }`
-      : navigator.userAgent;
-
-    console.log(this.name);
-    console.log(browser);
-    console.log(this.metrics());
-
-    console.log(
-      `FPS: ${this.frames}` +
-        ` | Frame: avg=${avgFrame.toFixed(2)}ms min=${
-          minFrame.toFixed(2)
-        }ms max=${maxFrame.toFixed(2)}ms` +
-        memoryMsg,
-    );
+    console.log([
+      "," + this.name,
+      `"${this.browser}"`,
+      PerformanceMetrics.wasmExecDuration || "",
+      PerformanceMetrics.wasmStartOffset || "",
+      this.frames,
+      game.fps?.toFixed(2),
+      game.tps?.toFixed(2),
+      game.bunnies,
+      avgFrame.toFixed(2),
+      minFrame.toFixed(2),
+      maxFrame.toFixed(2),
+      memory,
+      this.latency?.toFixed(2) || "",
+    ].join(","));
   }
 }
