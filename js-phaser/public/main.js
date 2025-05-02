@@ -1,6 +1,6 @@
 //Slightly modified version of: https://github.com/phaserjs/examples/blob/17d166da9ce77185b75f6f603dd91791137c4fcd/public/3.55/src/game%20objects/blitter/benchmark%20test%203.js#L4
 let bunnies;
-let gravity = 0.75;
+const gravity = 0.75;
 const screenWidth = 640;
 const screenHeight = 480;
 const upperBound = 40;
@@ -41,6 +41,13 @@ class Example extends Phaser.Scene {
     for (let i = 0; i < 10; ++i) {
       this.launch();
     }
+
+    // expose metrics
+    let metrics = {
+      fps: 0,
+      tps: 0,
+      bunnies: 0,
+    };
 
     // Diagnostics
     this.diagnostics = this.add.text(10, 10, "", {
@@ -95,16 +102,22 @@ class Example extends Phaser.Scene {
     if (this.frameTime >= 1000) {
       const fps = this.frames;
       const tps = this.ticks;
+      const bunnyCount = bunnies.getChildren().length;
 
       this.frameTime = 0;
       this.frames = 0;
 
       this.ticks = 0;
 
+      this.metrics = {
+        fps: fps,
+        tps: tps,
+        bunnies: bunnyCount,
+      };
       this.diagnostics.setText([
         `FPS: ${fps}`,
         `TPS: ${tps}`,
-        `Bunnies: ${bunnies.getChildren().length}`,
+        `Bunnies: ${bunnyCount}`,
       ]);
     }
   }

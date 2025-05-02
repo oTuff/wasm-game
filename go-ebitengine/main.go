@@ -1,3 +1,5 @@
+//go:build js && wasm
+
 package main
 
 import (
@@ -6,6 +8,7 @@ import (
 	"image/png"
 	"log"
 	"math/rand/v2"
+	"syscall/js"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -65,14 +68,9 @@ func (g *Game) edgeDetection(b *Bunny) {
 }
 
 func (g *Game) AddBunnies(count int) {
-	newBunnies := make([]Bunny, count, count)
-	// fmt.Printf("count: %v\n", count)
-	// fmt.Printf("before: cap %v, len %v, %p\n", cap(newBunnies), len(newBunnies), newBunnies)
+	newBunnies := make([]Bunny, count)
 	for i := range count {
 		newBunnies[i] = *NewBunny()
-		// newBunnies = append(newBunnies, *NewBunny())
-		// g.Bunnies = append(g.Bunnies, *NewBunny())
-		// fmt.Printf("cap %v, len %v, %p\n", cap(newBunnies), len(newBunnies), newBunnies)
 	}
 	g.Bunnies = append(g.Bunnies, newBunnies...)
 }
@@ -132,6 +130,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("fps: %.0f\ntps: %.0f\nbunnies: %v", ebiten.ActualFPS(), ebiten.ActualTPS(), len(g.Bunnies)))
 }
 
+func (g *Game) exposeMetrics() {
+	js.Global().Set("getGoMetrics", js.FuncOf(func(this js.Value, args []js.Value) any {
+		return map[string]any{
+			"fps":     ebiten.ActualFPS(),
+			"tps":     ebiten.ActualTPS(),
+			"bunnies": len(g.Bunnies),
+		}
+	}))
+}
+
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
 }
@@ -157,6 +165,8 @@ func main() {
 		Bunnies: make([]Bunny, 0, 1000), // Pre-allocate capacity for performance
 		Gravity: 0.75,
 	}
+	// expose JavaScript function to get metrics
+	game.exposeMetrics()
 
 	// Add initial bunnies
 	game.AddBunnies(10)

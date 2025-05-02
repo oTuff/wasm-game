@@ -9,13 +9,9 @@
     <script type="module">
       import { PerformanceMetrics } from "/public/performanceMetrics.js";
 
-      PerformanceMetrics.markWasmStart(); // Track WASM load time
-      // change to make workflow build go wasm
+      PerformanceMetrics.markWasmStart();
 
       const go = new Go();
-      // go.env = {
-      //   "GOGC": "20",
-      // };
 
       WebAssembly.instantiateStreaming(
         fetch("game.wasm"),
@@ -23,13 +19,14 @@
       ).then((result) => {
         go.run(result.instance);
 
-        PerformanceMetrics.markWasmEndAndLog(); // Track WASM load time
-      });
+        PerformanceMetrics.markWasmEndAndLog();
 
-      // Other metrics
-      // const metrics = new PerformanceMetrics();
-      // metrics.start();
-      // metrics.logWasmSize("/go-ebitengine/public/game.wasm");
+        const metrics = new PerformanceMetrics(
+          () => getGoMetrics(),
+          "Go",
+        );
+        // metrics.start();
+      });
     </script>
   </body>
 </html>

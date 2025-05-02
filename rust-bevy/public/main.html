@@ -11,8 +11,20 @@
     </style>
   </head>
   <script type="module">
-    import init, { run_bevy_app } from "./pkg/rust_bevy.js";
+    import { PerformanceMetrics } from "/public/performanceMetrics.js";
+    import init, {
+      get_rust_metrics,
+      run_bevy_app,
+    } from "./pkg/rust_bevy.js";
+
+    PerformanceMetrics.markWasmStart();
     await init();
+    PerformanceMetrics.markWasmEndAndLog();
+    const metrics = new PerformanceMetrics(
+      () => get_rust_metrics(),
+      "Rust",
+    );
+    // metrics.start();
     run_bevy_app();
   </script>
 </html>

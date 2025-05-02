@@ -12,9 +12,28 @@
   </head>
   <body>
     <div id="phaser-example"></div>
-    <script
-      src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"
-    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
     <script src="./main.js"></script>
+    <script type="module">
+      import { PerformanceMetrics } from "/public/performanceMetrics.js";
+
+      function waitScene() {
+        return new Promise((resolve) => {
+          const check = () => {
+            const scene = game?.scene?.scenes?.[0];
+            if (scene && scene.metrics) {
+              resolve(() => scene.metrics);
+            } else {
+              requestAnimationFrame(check);
+            }
+          };
+          check();
+        });
+      }
+      waitScene().then((metricsFn) => {
+        const perf = new PerformanceMetrics(metricsFn, "JS");
+        // perf.start();
+      });
+    </script>
   </body>
 </html>

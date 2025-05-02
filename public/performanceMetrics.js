@@ -1,4 +1,7 @@
 export class PerformanceMetrics {
+  static wasmExecDuration = null;
+  static wasmStartOffset = null;
+
   static markWasmStart() {
     performance.mark("start");
   }
@@ -8,36 +11,43 @@ export class PerformanceMetrics {
     performance.measure("WASM execution", "start", "end");
     const entry = performance.getEntriesByName("WASM execution")[0];
     if (entry) {
-      const { name, duration, startTime } = entry;
-      console.log(
-        `${name} time: ${duration.toFixed(2)} ms (started at ${
-          startTime.toFixed(2)
-        } ms after page load)`,
-      );
+      PerformanceMetrics.wasmExecDuration = entry.duration.toFixed(2);
+      PerformanceMetrics.wasmStartOffset = entry.startTime.toFixed(2);
     }
   }
 
-  constructor() {
+  constructor(metrics, lang) {
     this.frames = 0;
     this.lastSecond = performance.now();
     this.frameTimes = [];
-    this.lastInput = 0;
-    this.inputLatencies = [];
     this.lastFrame = undefined;
-
-    globalThis.addEventListener("mousedown", () => {
-      this.lastInput = performance.now();
-    });
+    this.metrics = metrics;
+    this.lang = lang;
+    this.lastBunnyCount = 0;
+    this.pendingInputTime = 0;
+    this.lastMetrics = null;
+    this.latency = null;
+    this.pollInterval = 1;
+    this.browser = (() => {
+      const ua = navigator.userAgent;
+      if (ua.includes("Firefox/")) return "Firefox";
+      if (ua.includes("Chrome/") && ua.includes("Safari/")) return "Chromium";
+      if (ua.includes("Safari/") && ua.includes("Version/")) return "GnomeWeb";
+      return ua;
+    })();
+    this.loggedHeader = false;
 
     this.tick = this.tick.bind(this);
   }
 
   start() {
     requestAnimationFrame(this.tick);
+    this.startMetricsPolling();
   }
 
   tick() {
     this.frames++;
+
     const now = performance.now();
 
     // Frame time
@@ -46,77 +56,93 @@ export class PerformanceMetrics {
     }
     this.lastFrame = now;
 
-    // Input latency
-    if (this.lastInput > 0) {
-      this.inputLatencies.push(now - this.lastInput);
-      this.lastInput = 0;
-    }
-
     // Log once per second
     if (now - this.lastSecond >= 1000) {
+      const element = document.querySelector("canvas");
+
+      const eventOptions = {
+        bubbles: true,
+        cancelable: true,
+        clientX: globalThis.innerWidth / 2,
+        clientY: globalThis.innerHeight / 2,
+        button: 0,
+      };
+
+      if (element && this.frames >= 60) {
+        const mouseDown = new MouseEvent("mousedown", eventOptions);
+        const pointerDown = new PointerEvent("pointerdown", eventOptions);
+        element.dispatchEvent(mouseDown);
+        element.dispatchEvent(pointerDown);
+
+        this.pendingInputTime = performance.now();
+      } else {
+        // console.log("stoped as fps was too low", this.frames);
+        const mouseUp = new MouseEvent("mouseup", eventOptions);
+        const pointerUp = new PointerEvent("pointerup", eventOptions);
+        element.dispatchEvent(mouseUp);
+        element.dispatchEvent(pointerUp);
+      }
+
       this._logStats();
       this.frames = 0;
       this.lastSecond = now;
       this.frameTimes = [];
-      this.inputLatencies = [];
     }
 
     requestAnimationFrame(this.tick);
   }
 
-  logWasmSize(wasmPath) {
-    fetch(wasmPath)
-      .then((r) => r.arrayBuffer())
-      .then((buffer) => {
-        const mb = buffer.byteLength / 1024 / 1024;
-        console.log(
-          `WASM size: ${mb.toFixed(2)} MB (${buffer.byteLength} bytes)`,
-        );
-      });
-  }
+  startMetricsPolling() {
+    const poll = () => {
+      const now = performance.now();
+      const metrics = this.metrics();
 
-  _formatMB(bytes) {
-    return (bytes / 1024 / 1024).toFixed(2);
-  }
+      if (this.pendingInputTime && this.lastMetrics) {
+        if (metrics.bunnies > this.lastMetrics.bunnies) {
+          this.latency = now - this.pendingInputTime;
+          this.pendingInputTime = 0;
+        }
+      }
 
-  _average(arr) {
-    if (!arr.length) return 0;
-    return arr.reduce((a, b) => a + b, 0) / arr.length;
-  }
-
-  _min(arr) {
-    return arr.length ? Math.min(...arr) : 0;
-  }
-
-  _max(arr) {
-    return arr.length ? Math.max(...arr) : 0;
+      this.lastMetrics = metrics;
+      setTimeout(poll, this.pollInterval);
+    };
+    poll();
   }
 
   _logStats() {
-    const fps = this.frames;
-    const avgFrame = this._average(this.frameTimes);
-    const minFrame = this._min(this.frameTimes);
-    const maxFrame = this._max(this.frameTimes);
-    const avgInput = this._average(this.inputLatencies);
-    const minInput = this._min(this.inputLatencies);
-    const maxInput = this._max(this.inputLatencies);
+    const avgFrame = this.frameTimes.length
+      ? this.frameTimes.reduce((a, b) => a + b, 0) / this.frameTimes.length
+      : 0;
+    const minFrame = this.frameTimes.length ? Math.min(...this.frameTimes) : 0;
+    const maxFrame = this.frameTimes.length ? Math.max(...this.frameTimes) : 0;
+    const memory = performance.memory
+      ? (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2)
+      : "";
 
-    let memoryMsg = "";
-    if (performance.memory) {
-      memoryMsg = ` | JS Heap Used: ${
-        this._formatMB(performance.memory.usedJSHeapSize)
-      } MB`;
+    const game = this.metrics();
+
+    if (!this.loggedHeader) {
+      console.log(
+        ",lang,browser,wasm_exec_ms,wasm_start_offset_ms,fps_js,fps_game,tps,bunnies,avg_frame,min_frame,max_frame,heap_mb,click_latency_ms",
+      );
+      this.loggedHeader = true;
     }
 
-    console.log(
-      `FPS: ${fps}` +
-        ` | Frame: avg=${avgFrame.toFixed(2)}ms min=${
-          minFrame.toFixed(2)
-        }ms max=${maxFrame.toFixed(2)}ms` +
-        ` | Input latency: avg=${avgInput.toFixed(2)}ms min=${
-          minInput.toFixed(2)
-        }ms max=${maxInput.toFixed(2)}ms` +
-        memoryMsg,
-    );
+    console.log([
+      "," + this.lang,
+      `"${this.browser}"`,
+      PerformanceMetrics.wasmExecDuration || "",
+      PerformanceMetrics.wasmStartOffset || "",
+      this.frames,
+      game.fps?.toFixed(2),
+      game.tps?.toFixed(2),
+      game.bunnies,
+      avgFrame.toFixed(2),
+      minFrame.toFixed(2),
+      maxFrame.toFixed(2),
+      memory,
+      this.latency?.toFixed(2) || "",
+    ].join(","));
   }
 }
