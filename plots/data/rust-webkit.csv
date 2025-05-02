@@ -1,3 +1,4 @@
+[Log] ,lang,browser,wasm_exec_ms,wasm_start_offset_ms,fps_js,fps_game,tps,bunnies,avg_frame,min_frame,max_frame,heap_mb,click_latency_ms (performanceMetrics.js, line 126)
 [Log] ,Rust,"GnomeWeb",206.00,10.00,60,57.93,64.00,36485,16.85,16.00,18.00,,0.00 (performanceMetrics.js, line 132)
 [Log] ,Rust,"GnomeWeb",206.00,10.00,60,59.07,64.00,36545,16.77,16.00,17.00,,0.00 (performanceMetrics.js, line 132)
 [Log] ,Rust,"GnomeWeb",206.00,10.00,60,58.93,64.00,36605,16.83,16.00,18.00,,0.00 (performanceMetrics.js, line 132)

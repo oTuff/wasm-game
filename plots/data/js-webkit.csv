@@ -1,3 +1,4 @@
+[Log] ,lang,browser,wasm_exec_ms,wasm_start_offset_ms,fps_js,fps_game,tps,bunnies,avg_frame,min_frame,max_frame,heap_mb,click_latency_ms (performanceMetrics.js, line 126)
 [Log] ,JS,"GnomeWeb",,,63,63.00,61.00,58270,16.06,14.00,21.00,,46.00 (performanceMetrics.js, line 132)
 [Log] ,JS,"GnomeWeb",,,63,63.00,61.00,58880,16.06,16.00,17.00,,46.00 (performanceMetrics.js, line 132)
 [Log] ,JS,"GnomeWeb",,,63,63.00,61.00,59490,16.06,14.00,21.00,,46.00 (performanceMetrics.js, line 132)
