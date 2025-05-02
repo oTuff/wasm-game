@@ -25,7 +25,7 @@ COLORS = {
     "JS": "#f7df1d",
 }
 
-SHOW_PLOTS = False  # Set to False to save plots as PNG instead of showing them
+SHOW_PLOTS = True  # Set to False to save plots as PNG instead of showing them
 
 
 # Load CSV files

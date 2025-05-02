@@ -16,13 +16,24 @@
     <script src="./main.js"></script>
     <script type="module">
       import { PerformanceMetrics } from "/public/performanceMetrics.js";
-      const metrics = new PerformanceMetrics(
-        () => {
-          return game.scene.scenes[0].metrics;
-        },
-        "JS",
-      );
-      metrics.start();
+
+      function waitScene() {
+        return new Promise((resolve) => {
+          const check = () => {
+            const scene = game?.scene?.scenes?.[0];
+            if (scene && scene.metrics) {
+              resolve(() => scene.metrics);
+            } else {
+              requestAnimationFrame(check);
+            }
+          };
+          check();
+        });
+      }
+      waitScene().then((metricsFn) => {
+        const perf = new PerformanceMetrics(metricsFn, "JS");
+        perf.start();
+      });
     </script>
   </body>
 </html>
