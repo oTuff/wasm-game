@@ -1,0 +1,56 @@
+@startuml
+title Project Architecture
+
+left to right direction
+skinparam componentStyle rectangle
+
+package "Infrastructure" {
+    [server.tsx] as server
+    [views.tsx] as views
+    server -> views
+
+  package "public/"{
+    [assets/ (JS)] as assets
+    [performanceMetrics.js] as metrics
+  }
+}
+
+package "Implementations" {
+  package "go-ebitengine/public/" {
+  [Go HTML (main.html)] as go_html
+  [Go JS (main.js)] as go_js
+  [Go WASM (game.wasm)] as go_wasm
+  }
+
+  package "rust-bevy/public/" {
+  [Rust HTML (main.html)] as rust_html
+  [Rust JS (rust_bevy.js)] as rust_js
+  [Rust WASM (rust_bevy_bg.wasm)] as rust_wasm
+  [assets/ (Rust)] as rust_assets
+  }
+
+  package "js-phaser/public/"{
+  [JS HTML (main.html)] as js_html
+  [JS (main.js)] as js_js
+  }
+
+  views -> go_html
+  views -> rust_html
+  views -> js_html
+
+  go_html --> go_js
+  rust_html --> rust_js
+  js_html --> js_js
+
+  go_js --> go_wasm
+  rust_js --> rust_wasm
+
+  rust_wasm --> rust_assets
+  js_js --> assets
+
+  metrics --> go_js
+  metrics --> rust_js
+  metrics --> js_js
+}
+
+@enduml
