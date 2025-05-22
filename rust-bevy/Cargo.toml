@@ -29,6 +29,7 @@ bevy = { version = "0.15.3", default-features = false, features = [
   "bevy_winit",
   "bevy_ui",
   "webgl2",
+  # "webgpu",
   "png",
   "default_font",
 ] }

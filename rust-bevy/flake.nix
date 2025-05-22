@@ -40,6 +40,7 @@
             binaryen # for wasm-opt
             mold
             cargo-zigbuild
+            twiggy
           ];
 
           buildInputs = with pkgs; [
