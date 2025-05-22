@@ -86,20 +86,18 @@ jobs:
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
           cache-all-crates: true
-          shared-key: rust-deploy
-          workspaces: |
-            rust-bevy -> rust-bevy/target
+          workspaces: rust-bevy
 
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
 
-      - name: Install latest binaryen (wasm-opt)
-        run: |
-          wget https://github.com/WebAssembly/binaryen/releases/download/version_116/binaryen-version_116-x86_64-linux.tar.gz
-          tar -xzf binaryen-version_116-x86_64-linux.tar.gz
-          sudo cp binaryen-version_116/bin/wasm-opt /usr/local/bin/
+      # - name: Install latest binaryen (wasm-opt)
+      #   run: |
+      #     wget https://github.com/WebAssembly/binaryen/releases/download/version_116/binaryen-version_116-x86_64-linux.tar.gz
+      #     tar -xzf binaryen-version_116-x86_64-linux.tar.gz
+      #     sudo cp binaryen-version_116/bin/wasm-opt /usr/local/bin/
 
       # - name: Install wasm-bindgen-cli from GitHub release
       #   run: |

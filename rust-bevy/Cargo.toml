@@ -39,23 +39,26 @@ once_cell = "1.21.3"
 [package.metadata.wasm-pack.profile.release]
 # wasm-opt = ["-Oz"]
 ### small binary size
-wasm-opt = [
-  "-Oz",
-  "--dce",
-  "--vacuum",
-  "--strip-debug",
-  "--strip-dwarf",
-  "--enable-bulk-memory",
-  # "--fast-math",
-  # "--enable-simd",
-  # "--coalesce-locals",
-  # "--remove-unused-module-elements",
-  # "--minify-imports-and-exports",
-  # "--converge", # super slow
-  # "--flatten",  # do not use this(slow and larger size) but not super slow with --rereloop
-  # "--rereloop", # needs --flatten
-  # "--enable-mutable-globals", # Allow mutable globals for certain optimizations (if applicable)
-]
+wasm-opt = false
+# wasm-opt = [
+#   "-Oz",
+#   "--enable-bulk-memory",
+# "--enable-saturating-float-to-int",
+# "--dce",
+# "--vacuum",
+# "--strip-debug",
+# "--strip-dwarf",
+# "--enable-bulk-memory",
+# "--fast-math",
+# "--enable-simd",
+# "--coalesce-locals",
+# "--remove-unused-module-elements",
+# "--minify-imports-and-exports",
+# "--converge", # super slow
+# "--flatten",  # do not use this(slow and larger size) but not super slow with --rereloop
+# "--rereloop", # needs --flatten
+# "--enable-mutable-globals", # Allow mutable globals for certain optimizations (if applicable)
+# ]
 
 ### high performance
 # wasm-opt = [
