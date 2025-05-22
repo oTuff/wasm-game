@@ -18,7 +18,7 @@ build: # build to wasm
 # `-s` Omit the symbol table
 # `-w  Omit DWARF debugging information
 
-wasm-opt:
+wasm-opt: # optimize wasm
 	wasm-opt -O4 --enable-bulk-memory -o ./public/game.wasm ./public/game.wasm 
 	
 ### size
