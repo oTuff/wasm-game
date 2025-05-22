@@ -87,6 +87,8 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
           cache-all-crates: true
           shared-key: rust-deploy
+          workspaces: |
+            rust-bevy -> rust-bevy/target
 
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@stable
