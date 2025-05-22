@@ -45,6 +45,7 @@ wasm-opt = [
   "--vacuum",
   "--strip-debug",
   "--strip-dwarf",
+  "--enable-bulk-memory",
   # "--fast-math",
   # "--enable-simd",
   # "--coalesce-locals",
