@@ -5,13 +5,15 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "pandas>=2.2.3",
- "matplotlib>=3.10.1",
- "pyqt5>=5.15.11",
- "pandas-stubs>=2.2.3.250308",
+  "pandas>=2.2.3",
+  "matplotlib>=3.10.1",
+  "pyqt5>=5.15.11",
+  "pandas-stubs>=2.2.3.250308",
+  "seaborn>=0.13.2",
 ]
 
-[tool.pyright]
-# Disable specific error reporting
-reportUnknownMemberType = false
-reportUnusedCallResult = false
+# # Disable specific error reporting
+# [tool.pyright]
+# reportUnknownMemberType = false
+# reportUnusedCallResult = false
+# typeCheckingMode = "standard"

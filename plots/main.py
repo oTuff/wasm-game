@@ -1,22 +1,22 @@
-import matplotlib.pyplot as plt
-import pandas as pd
-import os
 import glob
+import os
+
+import matplotlib.pyplot as plt
 import numpy as np
-from math import pi
+import pandas as pd
+import seaborn as sns
 
 
 def main():
-    plot_fps_vs_bunnies()
-    plot_max_bunnies()
-    plot_tps_stability()
+    # plot_fps_vs_bunnies()
+    # plot_max_bunnies()
+    # plot_tps_stability()
     plot_frame_time_distribution()
     plot_heap_usage()
-    plot_click_latency()
-    plot_radar_chart()
+    # plot_click_latency()  # not relevant for js
+    # plot_radar_chart()
 
 
-# Global Variables
 DATA_DIR = "./data"
 IMG_DIR = "./img"
 COLORS = {
@@ -24,73 +24,67 @@ COLORS = {
     "Rust": "#e43715",
     "JS": "#f7df1d",
 }
-
-SHOW_PLOTS = True  # Set to False to save plots as PNG instead of showing them
+SAVE_PLOTS_PNG = False
 
 
 # Load CSV files
 def load_data():
     all_files = glob.glob(os.path.join(DATA_DIR, "*.csv"))
-    dfs = []
+
+    df_list = []
+    laptop_df_list = []
+
     for f in all_files:
         df = pd.read_csv(f)
-        df = df.drop(columns=[df.columns[0]])  # Drop first unnamed column
-        dfs.append(df)
+        df = df.drop(columns=[df.columns[0]])
 
-    if not dfs:
+        if "laptop" in os.path.basename(f):
+            laptop_df_list.append(df)
+        else:
+            df_list.append(df)
+
+    if not df_list and not laptop_df_list:
         raise ValueError("No CSV files found in ./data")
 
-    return pd.concat(dfs, ignore_index=True)
+    return df_list, laptop_df_list
 
 
-df_all = load_data()
+df_list, laptop_df_list = load_data()
+df_all = pd.concat(df_list, ignore_index=True)
+# df_laptop = pd.concat(laptop_df_list, ignore_index=True)
+# df_all = pd.concat(laptop_df_list, ignore_index=True)
 langs = df_all["lang"].unique()  # Go, Rust, JS
 browsers = df_all["browser"].unique()  # Firefox, Chromium, GnomeWeb
 
 
 # Function to plot FPS vs bunnies
 def plot_fps_vs_bunnies():
-    fig, axs = plt.subplots(
-        len(langs), len(browsers), figsize=(15, 12), sharex=True, sharey=True
+    g = sns.FacetGrid(
+        df_all,
+        col="browser",
+        hue="lang",
+        # palette=COLORS,
+        col_wrap=len(browsers),
+        height=6,
+        aspect=1.5,
     )
-    axs = np.atleast_2d(axs)
-    fig.suptitle("FPS vs Bunnies", fontsize=16)
+    g.map(sns.lineplot, "bunnies", "fps_game", alpha=0.7)
 
-    for i, lang in enumerate(langs):
-        for j, browser in enumerate(browsers):
-            ax = axs[i, j]
-            sub_df = df_all[(df_all["lang"] == lang) & (df_all["browser"] == browser)]
-            if not sub_df.empty:
-                ax.plot(
-                    sub_df["bunnies"],
-                    sub_df["fps_js"],
-                    label="Browser FPS",
-                    color="green",
-                )
-                ax.plot(
-                    sub_df["bunnies"],
-                    sub_df["fps_game"],
-                    label="Game FPS",
-                    color=COLORS.get(lang, "gray"),
-                )
-            ax.set_title(f"{lang} - {browser}")
-            if i == len(langs) - 1:
-                ax.set_xlabel("Bunnies")
-            if j == 0:
-                ax.set_ylabel("FPS")
-            ax.legend()
+    g.set_axis_labels("Bunnies", "FPS")
+    g.set_titles("{col_name}")
+    g.add_legend(title="Language")
+    g.tight_layout(pad=2.0)
 
     finalize_plot("FPS_vs_Bunnies")
 
 
 # Function to plot Max bunnies (bar chart)
 def plot_max_bunnies():
-    max_bunnies_df = df_all.groupby(["lang", "browser"])["bunnies"].max().unstack()
-    max_bunnies_df.plot(kind="bar", figsize=(10, 6), colormap="Set2")
-    plt.title("Max Bunnies per Lang/Browser")
+    max_bunnies = df_all.groupby(["lang", "browser"], as_index=False)["bunnies"].max()
+    sns.barplot(max_bunnies, x="lang", y="bunnies", hue="browser", palette="icefire")
     plt.ylabel("Max Bunnies")
     plt.xlabel("Language")
-    plt.legend(title="Browser")
+
     finalize_plot("Max_Bunnies")
 
 
@@ -135,25 +129,25 @@ def plot_frame_time_distribution():
 
 # Function to plot Heap usage over bunnies
 def plot_heap_usage():
-    fig, axs = plt.subplots(
-        len(langs), len(browsers), figsize=(15, 12), sharex=True, sharey=True
-    )
-    axs = np.atleast_2d(axs)
-    fig.suptitle("Heap Memory Usage vs Bunnies", fontsize=16)
+    browser = "Chromium"
+    fig, ax = plt.subplots(figsize=(8, 6))
+    fig.suptitle("Heap Memory Usage vs Bunnies (Chromium Only)", fontsize=16)
 
-    for i, lang in enumerate(langs):
-        for j, browser in enumerate(browsers):
-            ax = axs[i, j]
-            sub_df = df_all[(df_all["lang"] == lang) & (df_all["browser"] == browser)]
-            if not sub_df.empty:
-                ax.plot(
-                    sub_df["bunnies"], sub_df["heap_mb"], marker="o", color="purple"
-                )
-            ax.set_title(f"{lang} - {browser}")
-            if i == len(langs) - 1:
-                ax.set_xlabel("Bunnies")
-            if j == 0:
-                ax.set_ylabel("Heap (MB)")
+    for lang in langs:
+        sub_df = df_all[(df_all["lang"] == lang) & (df_all["browser"] == browser)]
+        if not sub_df.empty:
+            ax.plot(
+                sub_df["bunnies"],
+                sub_df["heap_mb"],
+                marker="o",
+                label=lang,
+                color=COLORS.get(lang, "gray"),
+            )
+
+    ax.set_xlabel("Bunnies")
+    ax.set_ylabel("Heap (MB)")
+    ax.set_title(browser)
+    ax.legend(title="Language")
 
     finalize_plot("Heap_Usage")
 
@@ -171,48 +165,49 @@ def plot_click_latency():
 
 
 # Function to plot Radar chart (summary)
-def plot_radar_chart():
-    summary_df = (
-        df_all.groupby("lang")
-        .agg(
-            {
-                "fps_js": "mean",
-                "fps_game": "mean",
-                "tps": "mean",
-                "heap_mb": "mean",
-                "click_latency_ms": "mean",
-            }
-        )
-        .dropna()
-    )
 
-    summary_norm = (summary_df - summary_df.min()) / (
-        summary_df.max() - summary_df.min()
-    )
-    categories = summary_norm.columns.tolist()
-    N = len(categories)
-    angles = [n / float(N) * 2 * pi for n in range(N)]
-    angles += angles[:1]
-
-    plt.figure(figsize=(8, 8))
-    for lang in summary_norm.index:
-        values = summary_norm.loc[lang].tolist()
-        values += values[:1]
-        plt.polar(angles, values, label=lang, color=COLORS.get(lang, None))
-
-    plt.xticks(angles[:-1], categories)
-    plt.title("Performance Profile (Radar Chart)")
-    plt.legend(loc="upper right", bbox_to_anchor=(1.3, 1))
-    finalize_plot("Radar_Chart")
+# def plot_radar_chart():
+#     summary_df = (
+#         df_all.groupby("lang")
+#         .agg(
+#             {
+#                 "fps_js": "mean",
+#                 "fps_game": "mean",
+#                 "tps": "mean",
+#                 "heap_mb": "mean",
+#                 "click_latency_ms": "mean",
+#             }
+#         )
+#         .dropna()
+#     )
+#
+#     summary_norm = (summary_df - summary_df.min()) / (
+#         summary_df.max() - summary_df.min()
+#     )
+#     categories = summary_norm.columns.tolist()
+#     N = len(categories)
+#     angles = [n / float(N) * 2 * pi for n in range(N)]
+#     angles += angles[:1]
+#
+#     plt.figure(figsize=(8, 8))
+#     for lang in summary_norm.index:
+#         values = summary_norm.loc[lang].tolist()
+#         values += values[:1]
+#         plt.polar(angles, values, label=lang, color=COLORS.get(lang, None))
+#
+#     plt.xticks(angles[:-1], categories)
+#     plt.title("Performance Profile (Radar Chart)")
+#     plt.legend(loc="upper right", bbox_to_anchor=(1.3, 1))
+#     finalize_plot("Radar_Chart")
 
 
 # Helper function to either show or save the plot
 def finalize_plot(plot_name):
-    if SHOW_PLOTS:
-        plt.show()
-    else:
+    if SAVE_PLOTS_PNG:
         plt.savefig(f"{IMG_DIR}/{plot_name}.png")
         plt.close()
+    else:
+        plt.show()
 
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@
                 p: with p; [
                   pandas
                   matplotlib
+                  seaborn
                   pyqt5
                 ]
               ))
