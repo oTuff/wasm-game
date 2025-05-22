@@ -1,0 +1,59 @@
+@startuml
+
+struct App {
+  +new()
+  +insert_resource()
+  +add_plugins()
+  +add_systems()
+  +run()
+}
+
+struct BunnyBundle <<Bundle>> {
+  -Bunny
+  -Sprite
+  -Transform
+  -Velocity
+}
+
+struct Bunny <<Marker Component>>
+
+struct Velocity <<Component>> {
+  -x: f32
+  -y: f32
+}
+
+struct Transform <<Component>> {
+  -translation: Vec3
+}
+
+struct Sprite <<Component>> {
+  -image: Handle<Image>
+  -custom_size: Option<Vec2>
+}
+
+struct BunnyImage <<Resource>> {
+  -handle: Handle<Image>
+  -width: f32
+  -height: f32
+}
+
+entity System <<System>> {
+  -setup()
+  -initialize_bunny_image_data()
+  -spawn_bunnies()
+  -update_positions()
+  -check_boundaries()
+  -input_system()
+  -update_diagnostics_text()
+  +get_rust_metrics()
+}
+
+App --> System
+System --> BunnyImage
+System --> Bunny
+BunnyBundle --> Bunny
+BunnyBundle --> Sprite
+BunnyBundle --> Transform
+BunnyBundle --> Velocity
+
+@enduml

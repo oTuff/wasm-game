@@ -1,0 +1,25 @@
+@startuml
+
+struct Game {
+  +Sprite: *ebiten.Image
+  +Bunnies: []Bunny
+  +Gravity: float64
+  -edgeDetection()
+  +AddBunnies()
+  +Update()
+  +Draw()
+  -exposeMetrics()
+  +Layout()
+}
+
+struct Bunny {
+  +PosX, PosY: float64
+  +ScaleX, ScaleY: float64
+  +SpeedX, SpeedY: float64
+  +BounceVariation: float64
+  +WobbleFactor: float64
+}
+
+Game --> "0..*" Bunny
+
+@enduml
