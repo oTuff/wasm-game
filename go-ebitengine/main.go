@@ -33,8 +33,8 @@ type Bunny struct {
 	WobbleFactor    float64
 }
 
-func NewBunny() *Bunny {
-	return &Bunny{
+func NewBunny() Bunny {
+	return Bunny{
 		PosX:   rand.Float64() * 5,
 		PosY:   rand.Float64() * 5,
 		ScaleX: bunnyScale,
@@ -68,16 +68,12 @@ func (g *Game) edgeDetection(b *Bunny) {
 }
 
 func (g *Game) AddBunnies(count int) {
-	newBunnies := make([]Bunny, count)
-	for i := range count {
-		newBunnies[i] = *NewBunny()
+	for range count {
+		g.Bunnies = append(g.Bunnies, NewBunny())
 	}
-	g.Bunnies = append(g.Bunnies, newBunnies...)
 }
 
 func (g *Game) Update() error {
-
-	// fmt.Printf("cap %v, len %v, %p\n", cap(g.Bunnies), len(g.Bunnies), g.Bunnies)
 
 	// Left mouse button rapid fire add 10 bunnies
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) {
@@ -162,7 +158,7 @@ func main() {
 	// Create game instance
 	game := &Game{
 		Sprite:  sprite,
-		Bunnies: make([]Bunny, 0, 1000), // Pre-allocate capacity for performance
+		Bunnies: make([]Bunny, 0),
 		Gravity: 0.75,
 	}
 	// expose JavaScript function to get metrics
@@ -171,8 +167,6 @@ func main() {
 	// Add initial bunnies
 	game.AddBunnies(10)
 
-	// ebiten.SetScreenClearedEveryFrame(false)
-	// ebiten.SetVsyncEnabled(true)
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("BunnyMark Go Ebitengine")
 
