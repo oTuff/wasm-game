@@ -39,7 +39,7 @@ export function Layout({
         {" "}
         <p style="font-weight: bold;">Controls:</p>
         <ul>
-          <li>'left click' to rapidly add 10 bunnies</li>
+          <li>'left click' to rapidly add bunnies</li>
           <li>'right click' to round up 100 bunnies</li>
           <li>'middle click' to round up 1000 bunnies</li>
         </ul>
@@ -100,6 +100,7 @@ export function ExampleJS() {
         scrolling="no"
       >
       </iframe>
+      <p>This example is incomplete - all the controls won't work</p>
     </div>
   );
 }
