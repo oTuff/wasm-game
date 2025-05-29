@@ -84,7 +84,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wasm-pack
-          path: rust-bevy/pkg
+          path: rust-bevy/public/pkg
 
   deploy:
     name: Deploy
