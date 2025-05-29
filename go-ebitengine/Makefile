@@ -11,4 +11,4 @@ run: # run the program
 .PHONY: build
 build: # build and optimize wasm
 	env GOOS=js GOARCH=wasm go build -o public/game.wasm
-	wasm-opt -O1 --enable-bulk-memory -o ./public/game.wasm ./public/game.wasm 
+	wasm-opt -O2 --enable-bulk-memory -o ./public/game.wasm ./public/game.wasm 
