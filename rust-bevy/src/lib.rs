@@ -59,20 +59,6 @@ struct ColorText;
 #[derive(Component, Default)]
 struct Bunny;
 
-// Instead of creating separate Position and Scale components,
-// use the `Transform` inside `SpriteBundle` to store position and scale.
-//
-// #[derive(Component, Default)]
-// struct Position {
-//     x: f32,
-//     y: f32,
-// }
-// #[derive(Component, Default)]
-// struct Scale {
-//     x: f32,
-//     y: f32,
-// }
-
 #[derive(Component, Default)]
 struct Velocity {
     x: f32,
