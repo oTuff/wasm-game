@@ -47,7 +47,7 @@ strip = "debuginfo"
 opt-level = 0
 
 [profile.release]
-opt-level = "s"
+opt-level = 3
 panic = "abort"
 strip = true
 lto = "fat"
