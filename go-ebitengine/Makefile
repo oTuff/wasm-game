@@ -9,6 +9,5 @@ run: # run the program
 	nixGLIntel go run .
 
 .PHONY: build
-build: # build and optimize wasm
+build: # build wasm
 	env GOOS=js GOARCH=wasm go build -o public/game.wasm
-	wasm-opt -O2 --enable-bulk-memory -o ./public/game.wasm ./public/game.wasm 

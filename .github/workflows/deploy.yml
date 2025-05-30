@@ -30,16 +30,10 @@ jobs:
           sudo apt-get update
           sudo apt install -y libc6-dev libgl1-mesa-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libasound2-dev pkg-config
 
-      - name: Install latest binaryen (wasm-opt)
-        run: |
-          wget https://github.com/WebAssembly/binaryen/releases/download/version_123/binaryen-version_123-x86_64-linux.tar.gz
-          tar -xzf binaryen-version_123-x86_64-linux.tar.gz
-          sudo cp binaryen-version_123/bin/wasm-opt /usr/local/bin/
-
       - name: Install Dependencies
         run: go mod tidy
 
-      - name: Build and optimize WASM
+      - name: Build WASM
         run: make build
 
       - name: Upload wasm file
