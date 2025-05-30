@@ -11,7 +11,7 @@ def main():
     # plot_fps_vs_bunnies()
     # plot_max_bunnies()
     # plot_tps_stability()
-    plot_frame_time_distribution()
+    # plot_frame_time_distribution()
     plot_heap_usage()
     # plot_click_latency()  # not relevant for js
     # plot_radar_chart()
@@ -129,12 +129,10 @@ def plot_frame_time_distribution():
 
 # Function to plot Heap usage over bunnies
 def plot_heap_usage():
-    browser = "Chromium"
     fig, ax = plt.subplots(figsize=(8, 6))
-    fig.suptitle("Heap Memory Usage vs Bunnies (Chromium Only)", fontsize=16)
 
     for lang in langs:
-        sub_df = df_all[(df_all["lang"] == lang) & (df_all["browser"] == browser)]
+        sub_df = df_all[(df_all["lang"] == lang) & (df_all["browser"] == "Chromium")]
         if not sub_df.empty:
             ax.plot(
                 sub_df["bunnies"],
@@ -146,7 +144,6 @@ def plot_heap_usage():
 
     ax.set_xlabel("Bunnies")
     ax.set_ylabel("Heap (MB)")
-    ax.set_title(browser)
     ax.legend(title="Language")
 
     finalize_plot("Heap_Usage")
