@@ -17,14 +17,17 @@
       run_bevy_app,
     } from "./pkg/rust_bevy.js";
 
-    PerformanceMetrics.markWasmStart();
     await init();
-    PerformanceMetrics.markWasmEndAndLog();
+    PerformanceMetrics.logWasmTiming([
+      "rust_bevy_bg.wasm",
+      "bunny.png",
+    ]);
+
     const metrics = new PerformanceMetrics(
       () => get_rust_metrics(),
       "Rust",
     );
-    // metrics.start();
+    metrics.start();
     run_bevy_app();
   </script>
 </html>

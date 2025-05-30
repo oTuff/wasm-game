@@ -1,19 +1,20 @@
 export class PerformanceMetrics {
   static wasmExecDuration = null;
-  static wasmStartOffset = null;
 
-  static markWasmStart() {
-    performance.mark("start");
-  }
+  static logWasmTiming(assetList = []) {
+    const entries = performance.getEntriesByType("resource");
+    let totalDuration = 0;
 
-  static markWasmEndAndLog() {
-    performance.mark("end");
-    performance.measure("WASM execution", "start", "end");
-    const entry = performance.getEntriesByName("WASM execution")[0];
-    if (entry) {
-      PerformanceMetrics.wasmExecDuration = entry.duration.toFixed(2);
-      PerformanceMetrics.wasmStartOffset = entry.startTime.toFixed(2);
-    }
+    assetList.forEach((asset) => {
+      const entry = entries.find((e) => e.name.endsWith(asset));
+      if (entry) {
+        totalDuration += entry.duration;
+      } else {
+        console.warn(`[Perf] Resource "${asset}" not found.`);
+      }
+    });
+
+    PerformanceMetrics.wasmExecDuration = totalDuration.toFixed(2);
   }
 
   constructor(metrics, lang) {
@@ -124,7 +125,7 @@ export class PerformanceMetrics {
 
     if (!this.loggedHeader) {
       console.log(
-        ",lang,browser,wasm_exec_ms,wasm_start_offset_ms,fps_js,fps_game,tps,bunnies,avg_frame,min_frame,max_frame,heap_mb,click_latency_ms",
+        ",lang,browser,wasm_exec_ms,fps_js,fps_game,tps,bunnies,avg_frame,min_frame,max_frame,heap_mb,click_latency_ms",
       );
       this.loggedHeader = true;
     }
@@ -133,7 +134,6 @@ export class PerformanceMetrics {
       "," + this.lang,
       `"${this.browser}"`,
       PerformanceMetrics.wasmExecDuration || "",
-      PerformanceMetrics.wasmStartOffset || "",
       this.frames,
       game.fps?.toFixed(2),
       game.tps?.toFixed(2),

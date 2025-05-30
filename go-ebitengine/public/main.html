@@ -9,8 +9,6 @@
     <script type="module">
       import { PerformanceMetrics } from "/public/performanceMetrics.js";
 
-      PerformanceMetrics.markWasmStart();
-
       const go = new Go();
 
       WebAssembly.instantiateStreaming(
@@ -19,7 +17,7 @@
       ).then((result) => {
         go.run(result.instance);
 
-        PerformanceMetrics.markWasmEndAndLog();
+        PerformanceMetrics.logWasmTiming(["game.wasm"]);
 
         const metrics = new PerformanceMetrics(
           () => getGoMetrics(),
