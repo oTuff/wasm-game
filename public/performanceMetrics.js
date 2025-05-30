@@ -24,11 +24,6 @@ export class PerformanceMetrics {
     this.lastFrame = undefined;
     this.metrics = metrics;
     this.lang = lang;
-    this.lastBunnyCount = 0;
-    this.pendingInputTime = 0;
-    this.lastMetrics = null;
-    this.latency = null;
-    this.pollInterval = 1;
     this.browser = (() => {
       const ua = navigator.userAgent;
       if (ua.includes("Firefox/")) return "Firefox";
@@ -43,7 +38,6 @@ export class PerformanceMetrics {
 
   start() {
     requestAnimationFrame(this.tick);
-    this.startMetricsPolling();
   }
 
   tick() {
@@ -74,10 +68,7 @@ export class PerformanceMetrics {
         const pointerDown = new PointerEvent("pointerdown", eventOptions);
         element.dispatchEvent(mouseDown);
         element.dispatchEvent(pointerDown);
-
-        this.pendingInputTime = performance.now();
-      } else {
-        // console.log("stoped as fps was too low", this.frames);
+      } else if (element) {
         const mouseUp = new MouseEvent("mouseup", eventOptions);
         const pointerUp = new PointerEvent("pointerup", eventOptions);
         element.dispatchEvent(mouseUp);
@@ -91,24 +82,6 @@ export class PerformanceMetrics {
     }
 
     requestAnimationFrame(this.tick);
-  }
-
-  startMetricsPolling() {
-    const poll = () => {
-      const now = performance.now();
-      const metrics = this.metrics();
-
-      if (this.pendingInputTime && this.lastMetrics) {
-        if (metrics.bunnies > this.lastMetrics.bunnies) {
-          this.latency = now - this.pendingInputTime;
-          this.pendingInputTime = 0;
-        }
-      }
-
-      this.lastMetrics = metrics;
-      setTimeout(poll, this.pollInterval);
-    };
-    poll();
   }
 
   _logStats() {
@@ -125,7 +98,7 @@ export class PerformanceMetrics {
 
     if (!this.loggedHeader) {
       console.log(
-        ",lang,browser,wasm_exec_ms,fps_js,fps_game,tps,bunnies,avg_frame,min_frame,max_frame,heap_mb,click_latency_ms",
+        ",lang,browser,wasm_exec_ms,fps_js,fps_game,tps,bunnies,avg_frame,min_frame,max_frame,heap_mb",
       );
       this.loggedHeader = true;
     }
@@ -142,7 +115,6 @@ export class PerformanceMetrics {
       minFrame.toFixed(2),
       maxFrame.toFixed(2),
       memory,
-      this.latency?.toFixed(2) || "",
     ].join(","));
   }
 }
