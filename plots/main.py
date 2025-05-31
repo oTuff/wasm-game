@@ -9,9 +9,10 @@ import seaborn as sns
 def main():
     # plot_fps_vs_bunnies()
     # plot_max_bunnies()
-    plot_tps_stability()
+    # plot_tps_stability()
     # plot_frame_time_distribution()
     # plot_heap_usage()
+    plot_load_time()
 
 
 DATA_DIR = "./data"
@@ -142,6 +143,19 @@ def plot_heap_usage():
     plt.tight_layout()
 
     finalize_plot("Heap_Usage")
+
+
+def plot_load_time():
+    max_bunnies = df_all.groupby(["lang", "browser"], as_index=False)[
+        "wasm_exec_ms"
+    ].max()
+    sns.barplot(
+        max_bunnies, x="lang", y="wasm_exec_ms", hue="browser", palette="icefire"
+    )
+    plt.ylabel("Load time (ms)")
+    plt.xlabel("Language")
+
+    finalize_plot("Load_Time")
 
 
 # Helper function to either show or save the plot

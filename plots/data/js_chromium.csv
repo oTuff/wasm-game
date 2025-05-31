@@ -1,4 +1,4 @@
- ,lang,browser,wasm_start_offset_ms,fps_js,fps_game,tps,bunnies,avg_frame,min_frame,max_frame,heap_mb
+ ,lang,browser,wasm_exec_ms,fps_js,fps_game,tps,bunnies,avg_frame,min_frame,max_frame,heap_mb
  ,JS,"Chromium",,181,181.00,60.00,10,5.55,5.20,6.10,22.82
  ,JS,"Chromium",,180,181.00,60.00,10,5.56,4.30,6.80,22.46
  ,JS,"Chromium",,180,181.00,60.00,610,5.56,5.20,6.10,25.09
