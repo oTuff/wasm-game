@@ -11,18 +11,29 @@ def main():
     # plot_max_bunnies()
     # plot_tps_stability()
     # plot_frame_time_distribution()
-    # plot_heap_usage()
-    plot_load_time()
+    plot_heap_usage()
+    # plot_load_time()
 
 
 DATA_DIR = "./data"
 IMG_DIR = "./img"
-COLORS = {
+LANG_COLORS = {
     "Go": "#01aed8",
     "Rust": "#e43715",
     "JS": "#f7df1d",
 }
-SAVE_PLOTS_PNG = False
+LANG_CONTRAST_COLORS = {
+    "Go": "#FF1493",
+    "Rust": "#00C2A0",
+    "JS": "#3F51B5",
+}
+BROWSER_COLORS = {
+    "Chromium": "#264AFF",
+    "Firefox": "#D32F2F",
+    "GnomeWeb": "#7E57C2",
+}
+
+SAVE_PLOTS_PNG = True
 
 
 # Load CSV files
@@ -55,8 +66,9 @@ def load_data():
 
 df_list, laptop_df_list, opt_z, opt_3 = load_data()
 
-df_all = pd.concat(df_list + opt_z, ignore_index=True)
-# df_all = pd.concat(df_list + opt_3, ignore_index=True)
+# df_all = pd.concat(df_list + opt_z, ignore_index=True)
+df_all = pd.concat(df_list + opt_3, ignore_index=True)
+# df_all = pd.concat(df_list + opt_3 + opt_z, ignore_index=True)
 # df_all = pd.concat(laptop_df_list, ignore_index=True)
 
 langs = df_all["lang"].unique()  # Go, Rust, JS
@@ -65,29 +77,69 @@ browsers = df_all["browser"].unique()  # Firefox, Chromium, GnomeWeb
 
 # Function to plot FPS vs bunnies
 def plot_fps_vs_bunnies():
-    g = sns.FacetGrid(
-        df_all,
-        col="browser",
-        hue="lang",
-        palette=COLORS,
-        col_wrap=len(browsers),
-        height=6,
-        aspect=1.5,
-    )
-    g.map(sns.lineplot, "bunnies", "fps_game", alpha=0.7)
+    for browser in browsers:
+        print(browser)
+        df_subset = df_all[df_all["browser"] == browser]
 
-    g.set_axis_labels("Bunnies", "FPS")
-    g.set_titles("{col_name}")
-    g.add_legend(title="Language")
-    g.tight_layout(pad=2.0)
+        plt.figure(figsize=(8, 6))
+        sns.lineplot(
+            data=df_subset,
+            x="bunnies",
+            y="fps_js",
+            hue="lang",
+            palette=LANG_COLORS,
+            alpha=0.7,
+            marker="o",
+            markersize=10,
+        )
 
-    finalize_plot("FPS_vs_Bunnies")
+        plt.axhline(y=60, color="red", linestyle="--", linewidth=1, label="60 FPS")
+
+        for lang in df_subset["lang"].unique():
+            df_lang = df_subset[df_subset["lang"] == lang].sort_values("bunnies")
+            bunnies = df_lang["bunnies"].values
+            fps = df_lang["fps_game"].values
+
+            for i in range(len(fps) - 1):
+                x0, x1 = bunnies[i], bunnies[i + 1]
+                y0, y1 = fps[i], fps[i + 1]
+
+                if x0 >= 1500 and x1 >= 1500 and (y0 - 60) * (y1 - 60) < 0:
+                    bunny_cross = x0 + (60 - y0) * (x1 - x0) / (y1 - y0)
+                    plt.plot(
+                        bunny_cross,
+                        60,
+                        "X",
+                        markersize=12,
+                        color=LANG_CONTRAST_COLORS[lang],
+                        label=f"{lang} {x0}",
+                    )
+                    break
+
+        plt.xlabel("Bunnies")
+        plt.ylabel("FPS")
+        plt.legend(title="Language")
+        plt.tight_layout()
+
+        finalize_plot(f"FPS_vs_Bunnies_{browser}")
 
 
 # Function to plot Max bunnies (bar chart)
 def plot_max_bunnies():
     max_bunnies = df_all.groupby(["lang", "browser"], as_index=False)["bunnies"].max()
-    sns.barplot(max_bunnies, x="lang", y="bunnies", hue="browser", palette="icefire")
+
+    ax = sns.barplot(
+        max_bunnies,
+        x="lang",
+        y="bunnies",
+        hue="browser",
+        palette=BROWSER_COLORS,
+        order=["Go", "Rust", "JS"],
+    )
+
+    for container in ax.containers:
+        ax.bar_label(container, fmt="%.0f", label_type="edge")
+
     plt.ylabel("Max Bunnies")
     plt.xlabel("Language")
 
@@ -102,7 +154,7 @@ def plot_tps_stability():
     plt.figure(figsize=(12, 6))
     sns.boxplot(x="lang_browser", y="tps", data=df_clean)
 
-    # plt.ylim(1, 70)  # Focused TPS range
+    plt.ylim(55, 65)  # Focused TPS range
     plt.xticks(rotation=45)
     plt.xlabel("Language - Browser")
     plt.ylabel("TPS")
@@ -134,7 +186,14 @@ def plot_heap_usage():
 
     plt.figure(figsize=(8, 6))
     sns.lineplot(
-        data=df_clean, x="bunnies", y="heap_mb", hue="lang", marker="o", palette=COLORS
+        data=df_clean,
+        x="bunnies",
+        y="heap_mb",
+        hue="lang",
+        hue_order=["JS", "Rust", "Go"],
+        marker="o",
+        markersize=10,
+        palette=LANG_COLORS,
     )
 
     plt.xlabel("Bunnies")

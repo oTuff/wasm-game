@@ -164,8 +164,8 @@ fn update_positions(mut bunny_query: Query<(&mut Velocity, &mut Transform), With
 }
 
 fn check_boundaries(
-    mut bunny_query: Query<(&mut Velocity, &mut Transform), With<Bunny>>,
     bunny_image: ResMut<BunnyImage>,
+    mut bunny_query: Query<(&mut Velocity, &mut Transform), With<Bunny>>,
 ) {
     let scaled_width = bunny_image.width / 2.0 * BUNNY_SCALE;
     let scaled_height = bunny_image.height / 2.0 * BUNNY_SCALE;
@@ -193,9 +193,9 @@ fn input_system(
     mouse_button_input: Res<ButtonInput<MouseButton>>,
     commands: Commands,
     bunny_image: ResMut<BunnyImage>,
-    bunnies: Query<(), With<Bunny>>,
+    bunny_query: Query<Entity, With<Bunny>>,
 ) {
-    let bunny_count = bunnies.iter().count() as u32;
+    let bunny_count = bunny_query.iter().count() as u32;
 
     if mouse_button_input.pressed(MouseButton::Left) {
         spawn_bunnies(1, commands, bunny_image.into());
@@ -228,11 +228,11 @@ static GLOBAL_METRICS: Lazy<RwLock<Metrics>> = Lazy::new(|| RwLock::new(Metrics:
 fn update_diagnostics_text(
     diagnostics: Res<DiagnosticsStore>,
     mut writer: TextUiWriter,
-    text_query: Query<Entity, With<ColorText>>,
     fixed_time: Res<Time<Fixed>>,
-    bunnies: Query<(&mut Velocity, &mut Transform), With<Bunny>>,
+    text_query: Query<Entity, With<ColorText>>,
+    bunny_query: Query<Entity, With<Bunny>>,
 ) {
-    let bunny_count = bunnies.iter().count();
+    let bunny_count = bunny_query.iter().count();
     let fixed_delta = fixed_time.delta_secs_f64();
     let tickrate = if fixed_delta > 0.0 {
         1.0 / fixed_delta
