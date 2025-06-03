@@ -11,8 +11,9 @@ def main():
     # plot_max_bunnies()
     # plot_tps_stability()
     # plot_frame_time_distribution()
-    plot_heap_usage()
+    # plot_heap_usage()
     # plot_load_time()
+    rust_vs_rust()
 
 
 DATA_DIR = "./data"
@@ -33,7 +34,7 @@ BROWSER_COLORS = {
     "GnomeWeb": "#7E57C2",
 }
 
-SAVE_PLOTS_PNG = True
+SAVE_PLOTS_PNG = False
 
 
 # Load CSV files
@@ -73,6 +74,64 @@ df_all = pd.concat(df_list + opt_3, ignore_index=True)
 
 langs = df_all["lang"].unique()  # Go, Rust, JS
 browsers = df_all["browser"].unique()  # Firefox, Chromium, GnomeWeb
+
+# rust vs rust performance
+for df in opt_z:
+    df["opt_level"] = "opt_z"
+
+for df in opt_3:
+    df["opt_level"] = "opt_3"
+
+opt_combined = pd.concat(opt_z + opt_3, ignore_index=True)
+
+opt_filtered = opt_combined[
+    (opt_combined["lang"] == "Rust") & (opt_combined["browser"] == "Chromium")
+]
+
+
+def rust_vs_rust():
+    plt.figure(figsize=(8, 6))
+
+    sns.lineplot(
+        data=opt_filtered,
+        x="bunnies",
+        y="fps_js",
+        hue="opt_level",
+        marker="o",
+        alpha=0.7,
+        markersize=10,
+    )
+
+    plt.axhline(y=60, color="red", linestyle="--", linewidth=1, label="60 FPS")
+
+    for opt_level in opt_filtered["opt_level"].unique():
+        df_opt = opt_filtered[opt_filtered["opt_level"] == opt_level].sort_values(
+            "bunnies"
+        )
+        bunnies = df_opt["bunnies"].values
+        fps = df_opt["fps_game"].values
+
+        for i in range(len(fps) - 1):
+            x0, x1 = bunnies[i], bunnies[i + 1]
+            y0, y1 = fps[i], fps[i + 1]
+
+            if x0 >= 1500 and x1 >= 1500 and (y0 - 60) * (y1 - 60) < 0:
+                bunny_cross = x0 + (60 - y0) * (x1 - x0) / (y1 - y0)
+                plt.plot(
+                    bunny_cross,
+                    60,
+                    "X",
+                    markersize=12,
+                    label=f"{opt_level} {x0}",
+                )
+                break
+
+    plt.xlabel("Bunnies")
+    plt.ylabel("FPS (Game Loop)")
+    plt.legend(title="Optimization Level")
+    plt.tight_layout()
+
+    finalize_plot("rust_vs_rust")
 
 
 # Function to plot FPS vs bunnies
