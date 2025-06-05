@@ -7,13 +7,13 @@ import seaborn as sns
 
 
 def main():
-    # plot_fps_vs_bunnies()
+    plot_fps_vs_bunnies()
     # plot_max_bunnies()
     # plot_tps_stability()
     # plot_frame_time_distribution()
     # plot_heap_usage()
     # plot_load_time()
-    rust_vs_rust()
+    # rust_vs_rust()
 
 
 DATA_DIR = "./data"
@@ -97,9 +97,7 @@ def rust_vs_rust():
         x="bunnies",
         y="fps_js",
         hue="opt_level",
-        marker="o",
-        alpha=0.7,
-        markersize=10,
+        linewidth=3,
     )
 
     plt.axhline(y=60, color="red", linestyle="--", linewidth=1, label="60 FPS")
@@ -121,7 +119,7 @@ def rust_vs_rust():
                     bunny_cross,
                     60,
                     "X",
-                    markersize=12,
+                    markersize=10,
                     label=f"{opt_level} {x0}",
                 )
                 break
@@ -147,9 +145,7 @@ def plot_fps_vs_bunnies():
             y="fps_js",
             hue="lang",
             palette=LANG_COLORS,
-            alpha=0.7,
-            marker="o",
-            markersize=10,
+            linewidth=3,
         )
 
         plt.axhline(y=60, color="red", linestyle="--", linewidth=1, label="60 FPS")
@@ -169,7 +165,7 @@ def plot_fps_vs_bunnies():
                         bunny_cross,
                         60,
                         "X",
-                        markersize=12,
+                        markersize=10,
                         color=LANG_CONTRAST_COLORS[lang],
                         label=f"{lang} {x0}",
                     )
@@ -213,7 +209,7 @@ def plot_tps_stability():
     plt.figure(figsize=(12, 6))
     sns.boxplot(x="lang_browser", y="tps", data=df_clean)
 
-    plt.ylim(55, 65)  # Focused TPS range
+    plt.ylim(55, 65)
     plt.xticks(rotation=45)
     plt.xlabel("Language - Browser")
     plt.ylabel("TPS")
@@ -234,7 +230,7 @@ def plot_frame_time_distribution():
         axs[idx].set_title(metric)
         axs[idx].set_ylabel("ms")
 
-    plt.tight_layout(rect=[0, 0.03, 1, 0.95])  # Adjust layout to make room for suptitle
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
     finalize_plot("Frame_Time_Distribution")
 
@@ -250,9 +246,8 @@ def plot_heap_usage():
         y="heap_mb",
         hue="lang",
         hue_order=["JS", "Rust", "Go"],
-        marker="o",
-        markersize=10,
         palette=LANG_COLORS,
+        linewidth=3,
     )
 
     plt.xlabel("Bunnies")
