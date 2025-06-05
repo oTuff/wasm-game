@@ -46,9 +46,9 @@ package "Implementations" {
   rust_wasm --> rust_assets
   js_js --> assets
 
-  metrics --> go_js
-  metrics --> rust_js
-  metrics --> js_js
+  metrics <-- go_js
+  metrics <-- rust_js
+  metrics <-- js_js
 }
 
 @enduml
