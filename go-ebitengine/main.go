@@ -10,10 +10,11 @@ import (
 	"math/rand/v2"
 	"syscall/js"
 
-	"codeberg.org/tslocum/gohan"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/yohamta/donburi"
+	"github.com/yohamta/donburi/filter"
 )
 
 const (
@@ -37,65 +38,105 @@ type VelocityData struct {
 	X, Y float64
 }
 
-func NewBunny() gohan.Entity {
-	bunny := gohan.NewEntity()
+// Components
+var Position = donburi.NewComponentType[PositionData]()
+var Velocity = donburi.NewComponentType[VelocityData]()
 
-	bunny.AddComponent(&PositionData{
-		X: rand.Float64() * 5,
-		Y: rand.Float64() * 5,
-	})
-
-	bunny.AddComponent(&VelocityData{
-		X: (rand.Float64() * 2) + 2, // 2 to 4
-		Y: (rand.Float64() * 2) + 2, // 2 to 4
-	})
-
-	return bunny
-
-}
+// Query
+// var movementQuery = donburi.NewQuery(filter.Contains(Position, Velocity))
+// var positionQuery = donburi.NewQuery(filter.Contains(Position))
 
 type Game struct {
+	world donburi.World
 }
 
-func AddBunnies(count int) {
+func (g *Game) AddBunnies(count int) {
 	for range count {
-		NewBunny()
+		entity := g.world.Create(Position, Velocity)
+
+		entry := g.world.Entry(entity)
+
+		Position.SetValue(entry, PositionData{
+			X: rand.Float64() * 5,
+			Y: rand.Float64() * 5,
+		})
+
+		Velocity.SetValue(entry, VelocityData{
+			X: (rand.Float64() * 2) + 2, // 2 to 4
+			Y: (rand.Float64() * 2) + 2, // 2 to 4
+		})
 	}
 }
 
 func (g *Game) Update() error {
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButton0) {
-		AddBunnies(10)
+		g.AddBunnies(10)
 	}
 
 	// Right mouse button round up to nearest 100
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButton2) {
-		current := len(gohan.AllEntities())
+		current := g.world.Len()
 		toAdd := 100 - (current % 100)
 		if toAdd == 0 {
 			toAdd = 100
 		}
-		AddBunnies(toAdd)
+		g.AddBunnies(toAdd)
 	}
 
 	// Middle mouse button round up to nearest 1000
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButton1) {
-		current := len(gohan.AllEntities())
+		current := g.world.Len()
 		toAdd := 1000 - (current % 1000)
 		if toAdd == 0 {
 			toAdd = 1000
 		}
-		AddBunnies(toAdd)
+		g.AddBunnies(toAdd)
 	}
-	return gohan.Update()
+
+	query := donburi.NewQuery(filter.Contains(Position, Velocity))
+	for entry := range query.Iter(g.world) {
+		position := Position.Get(entry)
+		speed := Velocity.Get(entry)
+
+		position.X += speed.X
+		position.Y += speed.Y
+		speed.Y += 0.7
+
+		scaledWidth := float64(sprite.Bounds().Dx()) * bunnyScale
+		scaledHeight := float64(sprite.Bounds().Dy()) * bunnyScale
+		if position.X < 0 || position.X > screenWidth-scaledWidth {
+			speed.X = -speed.X
+		}
+
+		if position.Y > screenHeight-scaledHeight {
+			position.Y = screenHeight - scaledHeight
+			speed.Y = -speed.Y
+		} else if position.Y < upperBound && speed.Y < 0 {
+			speed.Y *= 0.7
+		}
+
+	}
+	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	err := gohan.Draw(screen)
-	if err != nil {
-		panic(err)
+	// movementQuery.EachEntity(g.world, func(entry *donburi.Entry) {
+	// positionQuery.EachEntity(g.world, func(entry *donburi.Entry) {
+	query := donburi.NewQuery(filter.Contains(Position))
+	for entry := range query.Iter(g.world) {
+
+		position := Position.Get(entry)
+
+		op := &ebiten.DrawImageOptions{}
+
+		op.GeoM.Scale(bunnyScale, bunnyScale)
+
+		op.GeoM.Translate(position.X, position.Y)
+
+		screen.DrawImage(sprite, op)
 	}
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("fps: %.0f\ntps: %.0f\nbunnies: %v", ebiten.ActualFPS(), ebiten.ActualTPS(), gohan.CurrentEntities()))
+
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("fps: %.0f\ntps: %.0f\nbunnies: %v", ebiten.ActualFPS(), ebiten.ActualTPS(), g.world.Len()))
 
 }
 
@@ -104,55 +145,13 @@ func (g *Game) exposeMetrics() {
 		return map[string]any{
 			"fps":     ebiten.ActualFPS(),
 			"tps":     ebiten.ActualTPS(),
-			"bunnies": gohan.CurrentEntities(),
+			"bunnies": g.world.Len(),
 		}
 	}))
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
-}
-
-type movementSystem struct {
-	Position *PositionData
-	Speed    *VelocityData
-}
-
-func NewMovementSystem() *movementSystem {
-	return &movementSystem{}
-}
-
-func (s *movementSystem) Update(_ gohan.Entity) error {
-
-	s.Position.X += s.Speed.X
-	s.Position.Y += s.Speed.Y
-	s.Speed.Y += 0.7
-
-	scaledWidth := float64(sprite.Bounds().Dx()) * bunnyScale
-	scaledHeight := float64(sprite.Bounds().Dy()) * bunnyScale
-	if s.Position.X < 0 || s.Position.X > screenWidth-scaledWidth {
-		s.Speed.X = -s.Speed.X
-	}
-
-	if s.Position.Y > screenHeight-scaledHeight {
-		s.Position.Y = screenHeight - scaledHeight
-		s.Speed.Y = -s.Speed.Y
-	} else if s.Position.Y < upperBound && s.Speed.Y < 0 {
-		s.Speed.Y *= 0.7
-	}
-	return nil
-}
-
-func (s *movementSystem) Draw(_ gohan.Entity, screen *ebiten.Image) error {
-	op := &ebiten.DrawImageOptions{}
-
-	op.GeoM.Scale(bunnyScale, bunnyScale)
-
-	op.GeoM.Translate(s.Position.X, s.Position.Y)
-
-	screen.DrawImage(sprite, op)
-
-	return nil
 }
 
 func main() {
@@ -172,15 +171,15 @@ func main() {
 	sprite = ebiten.NewImageFromImage(imageData)
 
 	// Create game instance
-	game := &Game{}
-
-	gohan.AddSystem(NewMovementSystem())
+	game := &Game{
+		world: donburi.NewWorld(),
+	}
 
 	// expose JavaScript function to get metrics
 	game.exposeMetrics()
 
 	// Add initial bunnies
-	AddBunnies(10)
+	game.AddBunnies(10)
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("BunnyMark Go Ebitengine")
