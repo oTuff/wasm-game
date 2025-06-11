@@ -13,8 +13,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/yohamta/donburi"
-	"github.com/yohamta/donburi/filter"
+	"github.com/mlange-42/ark/ecs"
 )
 
 const (
@@ -38,33 +37,26 @@ type VelocityData struct {
 	X, Y float64
 }
 
-// Components
-var Position = donburi.NewComponentType[PositionData]()
-var Velocity = donburi.NewComponentType[VelocityData]()
-
-// Query
-// var movementQuery = donburi.NewQuery(filter.Contains(Position, Velocity))
-// var positionQuery = donburi.NewQuery(filter.Contains(Position))
+var world = ecs.NewWorld()
+var mapper = ecs.NewMap2[PositionData, VelocityData](&world)
+var filter = ecs.NewFilter2[PositionData, VelocityData](&world)
 
 type Game struct {
-	world donburi.World
 }
 
 func (g *Game) AddBunnies(count int) {
 	for range count {
-		entity := g.world.Create(Position, Velocity)
+		_ = mapper.NewEntity(
+			&PositionData{
+				X: rand.Float64() * 5,
+				Y: rand.Float64() * 5,
+			},
 
-		entry := g.world.Entry(entity)
-
-		Position.SetValue(entry, PositionData{
-			X: rand.Float64() * 5,
-			Y: rand.Float64() * 5,
-		})
-
-		Velocity.SetValue(entry, VelocityData{
-			X: (rand.Float64() * 2) + 2, // 2 to 4
-			Y: (rand.Float64() * 2) + 2, // 2 to 4
-		})
+			&VelocityData{
+				X: (rand.Float64() * 2) + 2, // 2 to 4
+				Y: (rand.Float64() * 2) + 2, // 2 to 4
+			},
+		)
 	}
 }
 
@@ -75,7 +67,7 @@ func (g *Game) Update() error {
 
 	// Right mouse button round up to nearest 100
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButton2) {
-		current := g.world.Len()
+		current := world.Stats().Entities.Total
 		toAdd := 100 - (current % 100)
 		if toAdd == 0 {
 			toAdd = 100
@@ -85,7 +77,7 @@ func (g *Game) Update() error {
 
 	// Middle mouse button round up to nearest 1000
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButton1) {
-		current := g.world.Len()
+		current := world.Stats().Entities.Total
 		toAdd := 1000 - (current % 1000)
 		if toAdd == 0 {
 			toAdd = 1000
@@ -93,10 +85,9 @@ func (g *Game) Update() error {
 		g.AddBunnies(toAdd)
 	}
 
-	query := donburi.NewQuery(filter.Contains(Position, Velocity))
-	for entry := range query.Iter(g.world) {
-		position := Position.Get(entry)
-		speed := Velocity.Get(entry)
+	query := filter.Query()
+	for query.Next() {
+		position, speed := query.Get()
 
 		position.X += speed.X
 		position.Y += speed.Y
@@ -120,12 +111,9 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	// movementQuery.EachEntity(g.world, func(entry *donburi.Entry) {
-	// positionQuery.EachEntity(g.world, func(entry *donburi.Entry) {
-	query := donburi.NewQuery(filter.Contains(Position))
-	for entry := range query.Iter(g.world) {
-
-		position := Position.Get(entry)
+	query := filter.Query()
+	for query.Next() {
+		position, _ := query.Get()
 
 		op := &ebiten.DrawImageOptions{}
 
@@ -136,7 +124,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		screen.DrawImage(sprite, op)
 	}
 
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("fps: %.0f\ntps: %.0f\nbunnies: %v", ebiten.ActualFPS(), ebiten.ActualTPS(), g.world.Len()))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("fps: %.0f\ntps: %.0f\nbunnies: %v", ebiten.ActualFPS(), ebiten.ActualTPS(), world.Stats().Entities.Total))
 
 }
 
@@ -145,7 +133,7 @@ func (g *Game) exposeMetrics() {
 		return map[string]any{
 			"fps":     ebiten.ActualFPS(),
 			"tps":     ebiten.ActualTPS(),
-			"bunnies": g.world.Len(),
+			"bunnies": world.Stats().Entities.Total,
 		}
 	}))
 }
@@ -171,9 +159,7 @@ func main() {
 	sprite = ebiten.NewImageFromImage(imageData)
 
 	// Create game instance
-	game := &Game{
-		world: donburi.NewWorld(),
-	}
+	game := &Game{}
 
 	// expose JavaScript function to get metrics
 	game.exposeMetrics()

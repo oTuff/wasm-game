@@ -4,6 +4,7 @@ go 1.24.1
 
 require (
 	github.com/hajimehoshi/ebiten/v2 v2.8.7
+	github.com/mlange-42/ark v0.4.3
 	github.com/yohamta/donburi v1.15.7
 )
 
