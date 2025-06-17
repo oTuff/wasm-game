@@ -32,11 +32,13 @@ export function Layout({
               <li>
                 <a href="/js-phaser">JS Phaser</a>
               </li>
+              <li>
+                <a href="/lua-love2d">Lua Love2d</a>
+              </li>
             </ul>
           </nav>
         </header>
-        <main style="display: flex; justify-content: center;">{children}</main>
-        {" "}
+        <main style="display: flex; justify-content: center;">{children}</main>{" "}
         <p style="font-weight: bold;">Controls:</p>
         <ul>
           <li>'left click' to rapidly add bunnies</li>
@@ -69,8 +71,7 @@ export function ExampleGo() {
         width="640"
         height="480"
         style={{ border: "0" }}
-      >
-      </iframe>
+      ></iframe>
     </div>
   );
 }
@@ -83,8 +84,7 @@ export function ExampleRust() {
         src="/rust-bevy/public/main.html"
         width="640"
         height="480"
-      >
-      </iframe>
+      ></iframe>
     </div>
   );
 }
@@ -98,9 +98,23 @@ export function ExampleJS() {
         width="640"
         height="480"
         scrolling="no"
-      >
-      </iframe>
+      ></iframe>
       <p>This example is incomplete - all the controls won't work</p>
+    </div>
+  );
+}
+
+export function ExampleLua() {
+  return (
+    <div>
+      <h1>JavaScript Example</h1>
+      <iframe
+        src="/lua-love2d/public/main.html"
+        width="640"
+        height="480"
+        scrolling="no"
+      ></iframe>
+      <p>This example is incomplete</p>
     </div>
   );
 }

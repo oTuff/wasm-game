@@ -1,6 +1,13 @@
 import { Application, Router, send } from "oak";
 import renderToString from "preact-render-to-string";
-import { ExampleGo, ExampleJS, ExampleRust, Home, Layout } from "./views.tsx";
+import {
+  ExampleGo,
+  ExampleJS,
+  ExampleRust,
+  ExampleLua,
+  Home,
+  Layout,
+} from "./views.tsx";
 
 const router = new Router();
 
@@ -9,7 +16,14 @@ const pageRoutes = [
   { path: "/go-ebitengine", title: "Go WASM Example", view: <ExampleGo /> },
   { path: "/rust-bevy", title: "Rust WASM Example", view: <ExampleRust /> },
   { path: "/js-phaser", title: "JavaScript WASM Example", view: <ExampleJS /> },
+  { path: "/lua-love2d", title: "Lua WASM Example", view: <ExampleLua /> },
 ];
+
+router.use(async (ctx, next) => {
+  ctx.response.headers.set("Cross-Origin-Embedder-Policy", "require-corp");
+  ctx.response.headers.set("Cross-Origin-Opener-Policy", "same-origin");
+  await next();
+});
 
 pageRoutes.forEach(({ path, title, view: view }) => {
   router.get(path, (ctx) => {

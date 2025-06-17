@@ -1,4 +1,5 @@
 function love.load()
+	love.window.setMode(640, 480)
 	Player = {}
 	Player.x = 400
 	Player.y = 200
