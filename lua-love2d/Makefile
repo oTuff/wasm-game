@@ -15,7 +15,7 @@ run: # Run the game
 
 build: # Build the game
 	mkdir -p bin
-	zip -9 -r bin/game.love main.lua
+	zip -9 -r bin/game.love main.lua assets/
 	mkdir -p public
 	npx love.js -t luagame bin/game.love public/
 
