@@ -80,6 +80,31 @@ jobs:
           name: wasm-pack
           path: rust-bevy/public/pkg
 
+  build_lua:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./lua-love2d
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build game with love.js
+        run: make build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lua_wasm
+          path: |
+            lua-love2d/public/love.wasm
+            lua-love2d/public/game.data
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
@@ -102,6 +127,12 @@ jobs:
         with:
           name: wasm-pack
           path: ./rust-bevy/public/pkg
+
+      - name: Download lua wasm and data files
+        uses: actions/download-artifact@v4
+        with:
+          name: lua_pack
+          path: ./lua-love2d/public/
 
       - name: Install Deno
         uses: denoland/setup-deno@v2

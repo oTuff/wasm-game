@@ -14,6 +14,7 @@
       {
         devShell = pkgs.mkShell {
           nativeBuildInputs = with pkgs; [
+            nodejs_24 # needed for love.js
             luajit
             love
           ];

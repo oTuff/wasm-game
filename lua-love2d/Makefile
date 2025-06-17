@@ -18,4 +18,3 @@ build: # Build the game
 	zip -9 -r bin/game.love main.lua assets/
 	mkdir -p public
 	npx love.js -t luagame bin/game.love public/
-
