@@ -107,7 +107,7 @@ export function ExampleJS() {
 export function ExampleLua() {
   return (
     <div>
-      <h1>JavaScript Example</h1>
+      <h1>Lua Example</h1>
       <iframe
         src="/lua-love2d/public/main.html"
         width="640"
